@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    { "source": "/api/rusfar",   "destination": "/api/rusfar.js" },
+    { "source": "/api/keyrate",  "destination": "/api/keyrate.js" },
+    { "source": "/api/fx",       "destination": "/api/fx.js" },
+    { "source": "/api/intraday", "destination": "/api/intraday.js" },
+    { "source": "/api/candles",  "destination": "/api/candles.js" },
+    { "source": "/api/stock",    "destination": "/api/stock.js" },
+    { "source": "/api/pairs",      "destination": "/api/pairs.js" },
+    { "source": "/api/pairs-hist", "destination": "/api/pairs-hist.js" },
+    { "source": "/api/debt",      "destination": "/api/debt.js" },
+    { "source": "/api/inflation", "destination": "/api/inflation.js" },
+    { "source": "/api/debug",    "destination": "/api/debug.js" },
+    { "source": "/(.*)",       "destination": "/public/index.html" }
+  ]
+}
