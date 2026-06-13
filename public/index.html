@@ -14,6 +14,7 @@
     --cyan:#22d3ee;--cyan-dim:rgba(34,211,238,.13);--rose:#fb7185;--rose-dim:rgba(251,113,133,.13);
     --text1:#f1f5f9;--text2:#94a3b8;--text3:#475569;
     --mono:'Martian Mono',monospace;--sans:'Onest',sans-serif;
+    --ui-zoom:.9;   /* масштаб дашборда по умолчанию (как зум браузера 90%) */
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{min-height:100%}
@@ -21,7 +22,7 @@
   body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
   /* обычная текучая раскладка во всю ширину, нормальный размер, скролл при необходимости */
   .fithost{display:block;position:relative;z-index:1}
-  #fit{width:100%;max-width:2040px;margin:0 auto;display:block;padding:16px 20px}
+  #fit{width:100%;max-width:2040px;margin:0 auto;display:block;padding:16px 20px;zoom:var(--ui-zoom)}
   .wrap{width:100%;display:block;position:relative}
   .topbar{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:.85rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
   .topbar h1{font-size:1.25rem;font-weight:500;letter-spacing:-.01em}
@@ -215,7 +216,7 @@
   @media(max-width:860px){
     html,body{height:auto;overflow-y:auto;overflow-x:hidden}
     .fithost{position:static;inset:auto;display:block;overflow:visible}
-    #fit{max-width:none;min-height:0;display:block;padding:12px}
+    #fit{max-width:none;min-height:0;display:block;padding:12px;zoom:1}
     .wrap{height:auto;display:block;flex:none}
     .topbar{flex-direction:column;align-items:flex-start;gap:4px}
     .topbar-right{text-align:left}
