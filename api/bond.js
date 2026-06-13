@@ -80,6 +80,8 @@ export default async function handler(req, res) {
       secid: SECID, isin: SECID, name: s.SHORTNAME || s.SECNAME || 'Облигация OZON', board: BOARD,
       last, change: m.LASTCHANGE ?? null, changePct: m.LASTCHANGEPRCNT ?? null,
       ytm: m.YIELD ?? s.YIELDATPREVWAPRICE ?? null,                    // доходность к погашению, %
+      zspread: m.ZSPREAD ?? null,                                      // Z-спред MOEX к кривой ОФЗ, % (1.89 = 189 бп)
+      zspreadWap: m.ZSPREADATWAPRICE ?? null,
       nkd, face, faceUnit: s.FACEUNIT || 'SUR',
       durationDays: durDays, durationYears: durDays != null ? +(durDays / 365).toFixed(2) : null,
       bid: m.BID ?? null, offer: m.OFFER ?? null, waprice: m.WAPRICE ?? null,

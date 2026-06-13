@@ -190,13 +190,14 @@
   #ofz-svg{width:100%;height:80px;display:block}
   /* облигация OZON — крупные метрики + график + сгруппированные параметры */
   .bond-body{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
-  .bond-hero{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}
+  .bond-hero{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:12px}
   .bhcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:11px 13px;border-left:2.5px solid var(--violet)}
   .bhcard .k{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;white-space:nowrap}
   .bhcard .big{font-family:var(--mono);font-size:1.65rem;font-weight:300;line-height:1}
   .bhcard .big .chg{font-size:.5em}
   .bhcard .sm{font-family:var(--mono);font-size:10px;margin-top:7px;color:var(--text3)}
   .bhcard.ytm .big{color:var(--teal)}.bhcard.sp .big{color:var(--amber)}.bhcard.ks{border-left-color:var(--rose)}.bhcard.ks .big{color:var(--rose)}
+  .bhcard.z{border-left-color:var(--cyan)}.bhcard.z .big{color:var(--cyan)}
   .bond-chart{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:11px 13px}
   #bond-svg{width:100%;height:150px;display:block}
   .params{display:flex;flex-direction:column;gap:10px}
@@ -376,6 +377,7 @@
             <div class="bhcard ytm"><div class="k">Доходность YTM</div><div class="big" id="b-ytm">——</div><div class="sm">к погашению</div></div>
             <div class="bhcard ks"><div class="k">Справ. спред к КС</div><div class="big" id="b-kspread">——</div><div class="sm" id="b-kspread-sm">дисконт-маржа к фвд-КС</div></div>
             <div class="bhcard sp"><div class="k">Спред к ОФЗ</div><div class="big" id="b-gspread">——</div><div class="sm">G-spread к кривой</div></div>
+            <div class="bhcard z"><div class="k">Z-спред · MOEX</div><div class="big" id="b-zspread">——</div><div class="sm">к кривой ОФЗ (ZCYC)</div></div>
           </div>
           <div class="bond-chart">
             <div class="st" id="bond-chart-title">ЦЕНА · ИСТОРИЯ (% номинала)</div>
@@ -1017,6 +1019,9 @@ function renderBond(j){
   const ofzY=ofzYieldAt(j.durationYears);
   if(j.ytm!=null&&ofzY!=null){const bp=Math.round((j.ytm-ofzY)*100);$('b-gspread').innerHTML=`${bp>=0?'+':''}${bp}<span style="font-size:.5em"> бп</span>`;}
   else $('b-gspread').textContent='——';
+  // Z-спред MOEX (поле ZSPREAD, в %) → бп
+  if(j.zspread!=null){const bp=Math.round(j.zspread*100);$('b-zspread').innerHTML=`${bp>=0?'+':''}${bp}<span style="font-size:.5em"> бп</span>`;}
+  else $('b-zspread').textContent='——';
   // справедливый (вменённый) спред к КС — модель дисконт-маржи по форвардной кривой КС (расчёт на бэке)
   if(j.fairSpreadBp!=null){
     const bp=j.fairSpreadBp;
