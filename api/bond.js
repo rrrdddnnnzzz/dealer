@@ -2,6 +2,52 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   const SECID = 'RU000A10EXZ9', BOARD = 'TQCB';
+
+  // ── Модель «справедливого спреда к КС» (методика дисконт-маржи, как в расчёте коллег) ──
+  // Купон флоатера = КС + контрактный спред; КС фиксируется за CONTRACT.fixLagDays до периода.
+  // Будущая траектория КС берётся из форвардной кривой IRS KEYRATE (FWD_KS, номинальные ставки по годам).
+  // Справедливый спред s решаем линейно: PV(купоны=фвдКС+s, дисконт по рыночной YTM) = грязная цена.
+  // ⚠ FWD_KS и contractSpread — ручные входы (источник: IRS КС / проспект). Обновлять при смене кривой.
+  const CONTRACT = {
+    spread: 0.025,        // контрактный спред к КС (2.5%) — из проспекта
+    fixLagDays: 5,        // КС фиксируется за 5 дней до начала купонного периода
+    // форвардная КС по годам от даты оценки (номинальная, из листа «IRS КС»), доля
+    fwdKs: [
+      { y: 1, r: 0.1314 }, { y: 2, r: 0.1154 }, { y: 3, r: 0.1242 },
+      { y: 4, r: 0.1269 }, { y: 5, r: 0.1286 },
+    ],
+  };
+  const fwdKsAt = years => {
+    const yr = Math.max(1, Math.floor(years) + 1);
+    const arr = CONTRACT.fwdKs;
+    for (const p of arr) if (yr <= p.y) return p.r;
+    return arr[arr.length - 1].r;
+  };
+  // Линейное решение: PV = A + s·B, где A — PV при s=0, B — чувствительность к спреду.
+  function fairSpread({ clean, nkd, ytm, matDate, periodDays, face }) {
+    if (clean == null || ytm == null || !matDate) return null;
+    const today = new Date();
+    const mat = new Date(matDate);
+    if (!(mat > today)) return null;
+    const pd = periodDays || 30, y = ytm / 100, dayMs = 864e5;
+    const dirty = (clean / 100) * face + (nkd || 0);
+    // даты выплат: шаг назад от погашения по pd дней, берём только будущие
+    const dates = [];
+    for (let d = new Date(mat); d > today; d = new Date(d.getTime() - pd * dayMs)) dates.unshift(new Date(d));
+    let A = 0, B = 0;
+    for (const cd of dates) {
+      const t = (cd - today) / dayMs / 365;
+      if (t <= 0) continue;
+      const ks = fwdKsAt(t);
+      const df = Math.pow(1 + y, t);
+      A += (ks * (pd / 365) * face) / df;   // часть купона от КС
+      B += ((pd / 365) * face) / df;          // чувствительность к спреду
+    }
+    A += face / Math.pow(1 + y, (mat - today) / dayMs / 365);  // возврат номинала
+    if (B === 0) return null;
+    return (dirty - A) / B;   // доля (например 0.0208)
+  }
+
   const URL = `https://iss.moex.com/iss/engines/stock/markets/bonds/boards/${BOARD}/securities/${SECID}.json?iss.meta=off`;
   const opts = { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' }, signal: AbortSignal.timeout(9000) };
   const pad = n => String(n).padStart(2, '0');
@@ -45,6 +91,12 @@ export default async function handler(req, res) {
       updateTime: m.UPDATETIME || null, sysTime: m.SYSTIME || null,
       history: hist,
     };
+    // справедливый (вменённый) спред к КС — модель дисконт-маржи по форвардной КС
+    const fs = fairSpread({ clean: last, nkd, ytm: out.ytm, matDate: out.matDate, periodDays: out.couponPeriod, face });
+    out.fairSpread = fs != null ? +(fs * 100).toFixed(3) : null;        // %
+    out.fairSpreadBp = fs != null ? Math.round(fs * 10000) : null;       // базисные пункты
+    out.contractSpread = +(CONTRACT.spread * 100).toFixed(2);            // контрактный спред, %
+    out.contractSpreadBp = Math.round(CONTRACT.spread * 10000);
     if (out.last == null && out.ytm == null) return res.status(502).json({ error: 'нет данных по облигации' });
 
     res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=120');

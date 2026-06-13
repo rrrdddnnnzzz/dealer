@@ -30,15 +30,18 @@
   .topbar-right .time{color:var(--text2);font-size:14px}
 
   .board{display:flex;flex-direction:column;gap:14px}
-  .toprow{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+  .toprow{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
   .panel{background:rgba(19,22,30,.55);border:1px solid var(--border);border-radius:18px;padding:16px 18px;position:relative;overflow:hidden}
   .toprow .panel{display:flex;flex-direction:column}
-  /* контент фикс-высоты, гибкий только график (заполняет остаток выровненной панели) */
+  /* контент фикс-высоты, гибкий только нижний график (заполняет остаток выровненной панели) */
   .toprow .panel>*{flex:0 0 auto}
   .toprow .panel .chart-card{display:block}
   .toprow .panel .chart-card svg{width:100%;display:block}
-  #intra-svg{height:230px}
-  #cndl-svg{height:250px}
+  /* нижний график растягивается → высоты панелей RUSFAR и Юаней выравниваются */
+  .toprow .panel .fillchart{flex:1 1 auto;display:flex;flex-direction:column;min-height:230px}
+  .toprow .panel .fillchart svg{flex:1 1 auto;height:auto;min-height:200px}
+  #intra-svg{min-height:230px}
+  #cndl-svg{min-height:230px}
   .panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
   .panel.rusfar::before{background:linear-gradient(90deg,transparent,var(--blue),transparent)}
   .panel.fx::before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
@@ -185,13 +188,13 @@
   #ofz-svg{width:100%;height:80px;display:block}
   /* облигация OZON — крупные метрики + график + сгруппированные параметры */
   .bond-body{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
-  .bond-hero{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
-  .bhcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;border-left:2.5px solid var(--violet)}
-  .bhcard .k{font-family:var(--mono);font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
-  .bhcard .big{font-family:var(--mono);font-size:1.9rem;font-weight:300;line-height:1}
+  .bond-hero{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}
+  .bhcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:11px 13px;border-left:2.5px solid var(--violet)}
+  .bhcard .k{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;white-space:nowrap}
+  .bhcard .big{font-family:var(--mono);font-size:1.65rem;font-weight:300;line-height:1}
   .bhcard .big .chg{font-size:.5em}
   .bhcard .sm{font-family:var(--mono);font-size:10px;margin-top:7px;color:var(--text3)}
-  .bhcard.ytm .big{color:var(--teal)}.bhcard.sp .big{color:var(--amber)}
+  .bhcard.ytm .big{color:var(--teal)}.bhcard.sp .big{color:var(--amber)}.bhcard.ks{border-left-color:var(--rose)}.bhcard.ks .big{color:var(--rose)}
   .bond-chart{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:11px 13px}
   #bond-svg{width:100%;height:150px;display:block}
   .params{display:flex;flex-direction:column;gap:10px}
@@ -219,7 +222,8 @@
     .board{display:flex;flex-direction:column;flex:none;min-height:0;gap:12px}
     .toprow{display:flex;flex-direction:column;flex:none;min-height:0;gap:12px}
     .toprow .panel{min-height:0}
-    #intra-svg,#cndl-svg{height:200px}
+    #intra-svg,#cndl-svg{min-height:200px}
+    .toprow .panel .fillchart{min-height:200px}
     .terms{grid-template-columns:1fr 1fr}
     .fx-cards{grid-template-columns:1fr 1fr}
     .curgrid{grid-template-columns:repeat(2,1fr)}
@@ -250,7 +254,7 @@
     <div class="tb-tools">
       <span class="mstat closed" id="mstat"><span class="dot"></span>—</span>
       <button class="tbtn" id="btn-snap" title="Снимок дашборда (PNG)">📷 Снимок</button>
-      <button class="tbtn" id="btn-csv" title="Выгрузить метрики (CSV)">⬇ CSV</button>
+      <button class="tbtn" id="btn-csv" title="Выгрузить в Excel: сводка + внутридневная история по листам">⬇ Excel</button>
       <div class="topbar-right"><div class="time" id="clock">—</div><div id="dt">—</div><div id="cd"></div></div>
     </div>
   </div>
@@ -292,7 +296,7 @@
         <svg id="rfcurve-svg" viewBox="0 0 560 74" style="overflow:visible"></svg>
       </div>
 
-      <div class="chart-card">
+      <div class="chart-card fillchart">
         <div class="chart-head">
           <div class="st">RUSFARREALTIME O/N · СЕГОДНЯ</div>
           <span class="badge badge-live"><span class="live-dot"></span>LIVE</span>
@@ -323,10 +327,10 @@
         </div>
       </div>
 
-      <div class="spread-inline"><span class="lbl">СПРЕД TOM−TOD</span><b id="spread-v">——</b><span class="spread-pct" id="spread-pct"></span><span class="lbl">·</span><b id="spread-ann" class="ann">——</b><span class="lbl">% годовых (ACT/365)</span></div>
+      <div class="spread-inline"><span class="lbl">СПРЕД TOM−TOD</span><b id="spread-v">——</b><span class="spread-pct" id="spread-pct"></span><span class="lbl">·</span><b id="spread-ann" class="ann">——</b><span class="lbl" id="spread-ann-lbl">% годовых (ACT/365)</span></div>
 
       <!-- Собственный live-график свечей (источник: MOEX ISS) -->
-      <div class="chart-card">
+      <div class="chart-card fillchart">
         <div class="chart-head">
           <div>
             <div class="st" id="ch-title">CNYRUB_TOD · свечи</div>
@@ -368,6 +372,7 @@
           <div class="bond-hero">
             <div class="bhcard"><div class="k">Цена, % номинала</div><div class="big"><span id="b-last">——</span> <span class="chg" id="b-last-chg"></span></div><div class="sm" id="b-dirty-sm">грязная —— ₽</div></div>
             <div class="bhcard ytm"><div class="k">Доходность YTM</div><div class="big" id="b-ytm">——</div><div class="sm">к погашению</div></div>
+            <div class="bhcard ks"><div class="k">Справ. спред к КС</div><div class="big" id="b-kspread">——</div><div class="sm" id="b-kspread-sm">дисконт-маржа к фвд-КС</div></div>
             <div class="bhcard sp"><div class="k">Спред к ОФЗ</div><div class="big" id="b-gspread">——</div><div class="sm">G-spread к кривой</div></div>
           </div>
           <div class="bond-chart">
@@ -408,8 +413,8 @@
         <div class="oz-block"><div class="oz-k">Откр</div><div class="oz-val" id="oz-open">——</div></div>
         <div class="oz-block"><div class="oz-k">Макс</div><div class="oz-val g" id="oz-high">——</div></div>
         <div class="oz-block"><div class="oz-k">Мин</div><div class="oz-val r" id="oz-low">——</div></div>
-        <div class="oz-block"><div class="oz-k">Объём</div><div class="oz-val" id="oz-val">——</div></div>
-        <div class="oz-block"><div class="oz-k">Сделок</div><div class="oz-val" id="oz-trades">——</div></div>
+        <div class="oz-block"><div class="oz-k">Оборот, ₽</div><div class="oz-val" id="oz-val">——</div></div>
+        <div class="oz-block"><div class="oz-k">Объём, шт</div><div class="oz-val" id="oz-trades">——</div></div>
         <div class="oz-block"><div class="oz-k">Капитал.</div><div class="oz-val" id="oz-cap">——</div></div>
         <div class="oz-block oz-blk-spark">
           <div class="oz-k" id="oz-spark-lbl" style="margin-bottom:4px">OZON · СЕГОДНЯ</div>
@@ -453,6 +458,26 @@ const f2 = v => v!=null && !isNaN(v) ? Number(v).toFixed(2) : '——';
 const f4 = v => v!=null && !isNaN(v) ? Number(v).toFixed(4) : '——';
 const fmtDate = s => s ? (s.includes('-') ? s.split('-').reverse().join('.') : s) : '——';
 const mskNow = () => new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Moscow'});
+
+/* ── Производственный календарь РФ: выходные + праздники (для корректной стоимости переноса) ── */
+/* ⚠ Список нерабочих дней — ручной вход, обновлять по производственному календарю РФ. */
+const RU_HOLIDAYS = new Set([
+  // 2026
+  '2026-01-01','2026-01-02','2026-01-03','2026-01-04','2026-01-05','2026-01-06','2026-01-07','2026-01-08',
+  '2026-02-23','2026-03-09','2026-05-01','2026-05-11','2026-06-12','2026-11-04',
+  // 2027 (базовые госпраздники)
+  '2027-01-01','2027-01-04','2027-01-05','2027-01-06','2027-01-07','2027-01-08',
+  '2027-02-23','2027-03-08','2027-05-03','2027-05-10','2027-06-14','2027-11-04',
+]);
+const pad2 = n => String(n).padStart(2,'0');
+const isoLocal = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const isBizDay = d => { const w=d.getDay(); if(w===0||w===6) return false; return !RU_HOLIDAYS.has(isoLocal(d)); };
+// календарных дней от даты до следующего торгового дня (учёт выходных и праздников РФ)
+function carryDays(from){
+  const d=new Date(from); d.setHours(0,0,0,0); let n=0;
+  do{ d.setDate(d.getDate()+1); n++; } while(!isBizDay(d) && n<15);
+  return n||1;
+}
 
 function spread(val){
   if(val==null) return {str:'——',cls:''};
@@ -617,21 +642,25 @@ function fxCard(p,prefix){
   const was=(p.last!=null&&p.changePct!=null)?` · вчера ${f4(p.last/(1+p.changePct/100))}`:'';
   $(`${prefix}-t`).textContent=(p.updateTime||'——')+was;
 }
+let lastFx=null;
 function renderFx(j){
   $('err-fx').style.display='none';
   fxCard(j.tod,'tod');
   fxCard(j.tom,'tom');
+  let pct=null, ann=null, cdays=carryDays(new Date());
   if(j.spread!=null){
     const sign=j.spread>0?'+':'';
     $('spread-v').textContent=`${sign}${f4(j.spread)}`;
     const base=j.tod?.last ?? j.tom?.last;
     if(base){
-      const pct=j.spread/base*100;        // % к цене (карри за 1 день TOD→TOM)
-      const ann=pct*365;                  // в % годовых, ACT/365 (1 день между расчётами)
+      pct=j.spread/base*100;              // % к цене (карри за расчётный период TOD→TOM)
+      ann=pct*365/cdays;                  // в % годовых, ACT/365 с учётом нерабочих дней РФ
       $('spread-pct').textContent=`${pct>=0?'+':''}${pct.toFixed(3)}%`;
       $('spread-ann').textContent=`${ann>=0?'+':''}${ann.toFixed(2)}`;
+      $('spread-ann-lbl').textContent=`% годовых (ACT/365, перенос ${cdays} дн)`;
     }
   }
+  lastFx={tod:j.tod,tom:j.tom,spread:j.spread,pct,ann,days:cdays};
   const exch=j.exchangeTime||'——';
   $('fx-banner-txt').innerHTML=`🕓 биржа ${exch} · получено ${mskNow()}`;
 
@@ -776,9 +805,11 @@ function drawSpark(points,up){
      `<text x="${sx(points.length-1).toFixed(1)}" y="${H-3}" text-anchor="end" style="font-family:var(--mono);font-size:9px;fill:#475569">${points[points.length-1].t}</text>`;
   svg.innerHTML=h;
 }
+let lastStockQ=null;
 function renderStock(j){
   $('err-stock').style.display='none';
   const q=j.quote; if(!q) return;
+  lastStockQ=q;
   if(q.last!=null){$('oz-v').textContent=fPrice(q.last);$('oz-v').classList.remove('skel')}
   const up=(q.changePct??0)>=0;
   if(q.changePct!=null){
@@ -791,7 +822,7 @@ function renderStock(j){
   $('oz-high').textContent=q.high!=null?fPrice(q.high):'——';
   $('oz-low').textContent=q.low!=null?fPrice(q.low):'——';
   $('oz-val').textContent=fBig(q.valToday);
-  $('oz-trades').textContent=q.numTrades!=null?Number(q.numTrades).toLocaleString('ru-RU'):'——';
+  $('oz-trades').textContent=q.volToday!=null?Number(q.volToday).toLocaleString('ru-RU'):'——';
   $('oz-cap').textContent=fBig(q.cap);
   $('oz-upd').innerHTML=`🕓 ${q.updateTime||'——'}${q.sysTime?'<span class="sub">'+fmtDate(q.sysTime.slice(0,10))+'</span>':''}`;
   if(q.name)$('oz-name').textContent=`${q.name} · TQBR`;
@@ -984,6 +1015,13 @@ function renderBond(j){
   const ofzY=ofzYieldAt(j.durationYears);
   if(j.ytm!=null&&ofzY!=null){const bp=Math.round((j.ytm-ofzY)*100);$('b-gspread').innerHTML=`${bp>=0?'+':''}${bp}<span style="font-size:.5em"> бп</span>`;}
   else $('b-gspread').textContent='——';
+  // справедливый (вменённый) спред к КС — модель дисконт-маржи по форвардной кривой КС (расчёт на бэке)
+  if(j.fairSpreadBp!=null){
+    const bp=j.fairSpreadBp;
+    $('b-kspread').innerHTML=`${bp>=0?'+':''}${bp}<span style="font-size:.5em"> бп</span>`;
+    const cmp=(j.contractSpreadBp!=null)?` · контракт +${j.contractSpreadBp}`:'';
+    $('b-kspread-sm').textContent=`дисконт-маржа к фвд-КС${cmp}`;
+  } else $('b-kspread').textContent='——';
   // параметры
   $('b-nkd').textContent=j.nkd!=null?f2(j.nkd)+' ₽':'——';
   $('b-coupon').textContent=j.nextCoupon?fmtDate(j.nextCoupon):'——';
@@ -1044,21 +1082,136 @@ function marketStatus(){
   el.className=`mstat ${cls}`; el.innerHTML=`<span class="dot"></span>${txt}`;
 }
 
-/* ───────── Экспорт: CSV + PNG ───────── */
-function exportCSV(){
-  const rows=[['Метрика','Значение','Изм.','Время']];
-  document.querySelectorAll('#pairs-list .cc').forEach(c=>{
-    rows.push([c.querySelector('.nm')?.textContent||'', c.querySelector('.rt')?.textContent||'', c.querySelector('.dl')?.textContent||'', (c.querySelector('.upd')?.textContent||'').replace('обновлено','').trim()]);
-  });
-  const add=(n,v)=>rows.push([n,(($(v)?.textContent)||'').trim(),'','']);
-  add('RUSFAR realtime o/n','rt-v'); add('RUSFAR фикс o/n','fix-v');
-  add('CNYRUB TOD','tod-v'); add('CNYRUB TOM','tom-v');
-  add('RGBI','rgbi-v'); add('RUONIA','ruonia-v'); add('ОФЗ 1г','ofz-1y');
-  add('OZON','oz-v');
-  const csv='﻿'+rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(';')).join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download=`treasury_${new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')}.csv`; a.click();
+/* ───────── Накопитель внутридневной истории (лента опросов) ───────── */
+const TAPE=[];   // по строке каждые POLL мс — снимок всех показателей с момента открытия
+function recordTape(){
+  const r=lastRusfar||{};
+  let gbp=null;
+  if(lastBond){ const oy=ofzYieldAt(lastBond.durationYears); if(lastBond.ytm!=null&&oy!=null) gbp=Math.round((lastBond.ytm-oy)*100); }
+  const row={
+    t:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Europe/Moscow'}),
+    rt:r.RT?.currentValue??null, nc:r.NC?.currentValue??null, fix:r.ON?.currentValue??null,
+    r1w:r['1W']?.currentValue??null, r2w:r['2W']?.currentValue??null, r1m:r['1M']?.currentValue??null, r3m:r['3M']?.currentValue??null,
+    cnyTod:lastFx?.tod?.last??null, cnyTom:lastFx?.tom?.last??null, cnySpread:lastFx?.spread??null, cnyCarry:lastFx?.ann??null,
+    bLast:lastBond?.last??null, bDirty:lastBond?.dirty??null, bYtm:lastBond?.ytm??null, bKs:lastBond?.fairSpreadBp??null, bG:gbp,
+    oz:lastStockQ?.last??null, ozPct:lastStockQ?.changePct??null,
+    usdrub:pairCache['USD/RUB']?.val??null, eurrub:pairCache['EUR/RUB']?.val??null, kztrub:pairCache['KZT/RUB']?.val??null,
+    bynrub:pairCache['BYN/RUB']?.val??null, usdkzt:pairCache['USD/KZT']?.val??null, eurkzt:pairCache['EUR/KZT']?.val??null,
+  };
+  // пишем только если есть хоть какое-то значение
+  if(Object.keys(row).some(k=>k!=='t'&&row[k]!=null)) TAPE.push(row);
+}
+
+/* ───────── Экспорт: Excel (.xlsx, форматы по ячейкам + история по листам) + PNG ───────── */
+function loadXLSX(){ if(window.XLSX||window._xlsxLoading) return; window._xlsxLoading=1; const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; document.head.appendChild(s); }
+loadXLSX();
+
+async function exportXLSX(){
+  if(typeof XLSX==='undefined'){ loadXLSX(); alert('Загрузка модуля Excel… повтори через 1–2 секунды'); return; }
+  const btn=$('btn-csv'); const ot=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Excel…'; }
+  try{ await buildXLSX(); }
+  catch(e){ alert('Не удалось собрать Excel: '+e.message); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=ot; } }
+}
+
+async function buildXLSX(){
+  const wb=XLSX.utils.book_new();
+  // применяет числовой формат к колонкам (ключ = индекс колонки, 0-based), начиная со 2-й строки
+  const fmtCols=(ws,fmts)=>{ const rng=XLSX.utils.decode_range(ws['!ref']); for(let R=rng.s.r+1;R<=rng.e.r;R++) for(const c in fmts){ const ref=XLSX.utils.encode_cell({r:R,c:+c}); const cell=ws[ref]; if(cell&&typeof cell.v==='number'){ cell.t='n'; cell.z=fmts[c]; } } };
+  const add=(name,aoa,fmts,widths)=>{ const ws=XLSX.utils.aoa_to_sheet(aoa); if(fmts) fmtCols(ws,fmts); if(widths) ws['!cols']=widths.map(w=>({wch:w})); if(aoa.length) ws['!freeze']={xSplit:0,ySplit:1}; XLSX.utils.book_append_sheet(wb,ws,name); };
+
+  // ── подтягиваем полный внутридневной ряд из MOEX (RUSFAR RT, юань TOD/TOM, акция) ──
+  const jget=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const [intr,todC,tomC,stock]=await Promise.all([
+    jget('/api/intraday'),
+    jget('/api/candles?secid=CNY000000TOD&interval=10'),
+    jget('/api/candles?secid=CNYRUB_TOM&interval=10'),
+    jget('/api/stock'),
+  ]);
+  const cdays=carryDays(new Date());
+
+  // ── 1. Сводка (текущие значения) ──
+  const r=lastRusfar||{};
+  const snap=[['Параметр','Значение','Ед.','Время МСК']];
+  const t=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Europe/Moscow'});
+  const S=(n,v,u)=>snap.push([n, (v==null||isNaN(v))?'':+v, u||'', t]);
+  S('RUSFAR realtime O/N', r.RT?.currentValue,'%');
+  S('RUSFAR compound O/N (RUSFARN)', r.NC?.currentValue,'%');
+  S('RUSFAR фикс O/N (12:30)', r.ON?.currentValue,'%');
+  S('RUSFAR 1W', r['1W']?.currentValue,'%'); S('RUSFAR 2W', r['2W']?.currentValue,'%');
+  S('RUSFAR 1M', r['1M']?.currentValue,'%'); S('RUSFAR 3M', r['3M']?.currentValue,'%');
+  S('Ключевая ставка ЦБ', KEY_RATE,'%'); S('RUONIA', ruoniaRate,'%');
+  S('CNYRUB TOD', lastFx?.tod?.last,'₽'); S('CNYRUB TOM', lastFx?.tom?.last,'₽');
+  S('Спред TOM−TOD', lastFx?.spread,'₽'); S('Своп CNY (стоимость переноса)', lastFx?.ann,'% год.');
+  S('Облигация OZON цена', lastBond?.last,'% ном.'); S('Облигация грязная', lastBond?.dirty,'₽');
+  S('Облигация YTM', lastBond?.ytm,'%'); S('Облигация спред к КС', lastBond?.fairSpreadBp,'бп');
+  S('Акция OZON', lastStockQ?.last,'₽');
+  ['USD/RUB','EUR/RUB','KZT/RUB','BYN/RUB','USD/KZT','EUR/KZT'].forEach(p=>S(p, pairCache[p]?.val, ''));
+  add('Сводка', snap, null, [40,14,8,12]);
+
+  // ── 2. RUSFAR RT (полный день, MOEX) ──
+  const a1=[['Время','RUSFAR RT O/N, %']];
+  (intr?.points||[]).forEach(p=>a1.push([p.t, p.v]));
+  add('RUSFAR RT (день)', a1, {1:'0.00'}, [10,20]);
+
+  // ── 3. RUSFAR срочные (сессия) ──
+  const a2=[['Время','RT O/N','Compound O/N','Фикс O/N','1W','2W','1M','3M']];
+  TAPE.forEach(x=>a2.push([x.t,x.rt,x.nc,x.fix,x.r1w,x.r2w,x.r1m,x.r3m]));
+  add('RUSFAR срочные (сессия)', a2, {1:'0.00',2:'0.00',3:'0.00',4:'0.00',5:'0.00',6:'0.00',7:'0.00'}, [10,9,12,9,8,8,8,8]);
+
+  // ── 4. Юань CNYRUB (полный день) + своп ──
+  const tm={};
+  (todC?.candles||[]).forEach(k=>{ (tm[k.t]=tm[k.t]||{}).tod=k.c; });
+  (tomC?.candles||[]).forEach(k=>{ (tm[k.t]=tm[k.t]||{}).tom=k.c; });
+  const a4=[['Время','CNYRUB TOD','CNYRUB TOM','Спред TOM−TOD','Спред, %',`Своп, % год. (перенос ${cdays} дн)`]];
+  Object.keys(tm).sort().forEach(k=>{ const o=tm[k], hhmm=k.slice(11,16);
+    if(o.tod!=null&&o.tom!=null){ const sp=+(o.tom-o.tod).toFixed(4); const pct=sp/o.tod*100; const ann=pct*365/cdays;
+      a4.push([hhmm,o.tod,o.tom,sp,+pct.toFixed(4),+ann.toFixed(2)]); }
+    else a4.push([hhmm, o.tod??null, o.tom??null, null, null, null]); });
+  add('Юань CNYRUB (день)', a4, {1:'0.0000',2:'0.0000',3:'0.0000',4:'0.0000',5:'0.00'}, [10,14,14,16,12,26]);
+
+  // ── 5. Облигация OZON (сессия) ──
+  const a5=[['Время','Цена, %','Грязная, ₽','YTM, %','Спред к КС, бп','Спред к ОФЗ, бп']];
+  TAPE.forEach(x=>{ if(x.bLast!=null) a5.push([x.t,x.bLast,x.bDirty,x.bYtm,x.bKs,x.bG]); });
+  add('Облигация (сессия)', a5, {1:'0.00',2:'#,##0.00',3:'0.00',4:'0',5:'0'}, [10,11,13,9,16,16]);
+
+  // ── 6. Курсы валют (сессия) ──
+  const a6=[['Время','USD/RUB','EUR/RUB','KZT/RUB','BYN/RUB','USD/KZT','EUR/KZT']];
+  TAPE.forEach(x=>a6.push([x.t,x.usdrub,x.eurrub,x.kztrub,x.bynrub,x.usdkzt,x.eurkzt]));
+  add('Курсы валют (сессия)', a6, {1:'0.0000',2:'0.0000',3:'0.0000',4:'0.0000',5:'0.00',6:'0.00'}, [10,12,12,12,12,12,12]);
+
+  // ── 7. Акция OZON (полный день) ──
+  const a7=[['Время','OZON, ₽']];
+  (stock?.spark||[]).forEach(p=>a7.push([p.t, p.v]));
+  add('Акция OZON (день)', a7, {1:'#,##0.0'}, [10,14]);
+
+  // ── 8. Описание ──
+  const info=[
+    ['Лист / Параметр','Что означает'],
+    ['Сводка','Текущие значения всех показателей на момент выгрузки (время МСК).'],
+    ['RUSFAR RT O/N','Российская ставка обеспеченного фондирования (overnight), реальное время, % годовых. MOEX.'],
+    ['RUSFAR compound (RUSFARN)','Накопленная (капитализированная) overnight-ставка RUSFAR в реальном времени.'],
+    ['RUSFAR фикс 12:30','Официальный дневной фиксинг RUSFAR. Срочные 1W/2W/1M/3M фиксируются в 12:30 МСК.'],
+    ['Ключевая ставка ЦБ','Ключевая ставка Банка России, % годовых.'],
+    ['RUONIA','Индикативная ставка межбанковского необеспеченного o/n кредитования.'],
+    ['CNYRUB TOD','Курс юаня к рублю с расчётами «сегодня» (T+0).'],
+    ['CNYRUB TOM','Курс юаня к рублю с расчётами «завтра» (следующий торговый день).'],
+    ['Спред TOM−TOD','Разница котировок TOM и TOD в рублях — стоимость переноса позиции на один расчётный период.'],
+    ['Своп, % годовых (стоимость переноса)','(TOM−TOD)/TOD × 365 / (календарных дней до следующего торгового дня). Делитель учитывает выходные и праздники РФ, поэтому перед нерабочими днями ставка не завышается. Текущий перенос: '+cdays+' дн.'],
+    ['Облигация цена, %','Чистая цена облигации OZON (RU000A10EXZ9, TQCB) в % от номинала.'],
+    ['Грязная, ₽','Цена с учётом НКД (накопленного купонного дохода), в рублях.'],
+    ['YTM, %','Доходность к погашению, % годовых.'],
+    ['Спред к КС, бп','Справедливый (вменённый) спред к ключевой ставке: модель дисконт-маржи по форвардной кривой КС. Базисные пункты.'],
+    ['Спред к ОФЗ, бп','G-spread: YTM минус доходность ОФЗ на сроке дюрации облигации. Базисные пункты.'],
+    ['Курсы валют','Рыночные кросс-курсы: USD/RUB, EUR/RUB, KZT/RUB, BYN/RUB, USD/KZT, EUR/KZT.'],
+    ['Акция OZON','Цена акции OZON на MOEX (TQBR), ₽ — внутридневной ряд за последний торговый день.'],
+    ['Пометка «(день)»','Полный внутридневной ряд за последний торговый день, подтянут из MOEX в момент выгрузки.'],
+    ['Пометка «(сессия)»','Точки, накопленные с момента открытия дашборда (опрос каждые '+Math.round(POLL/1000)+' с). Держите вкладку открытой весь день для полной истории.'],
+  ];
+  add('Описание', info, null, [44,95]);
+
+  XLSX.writeFile(wb, `treasury_${new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')}.xlsx`);
 }
 function exportPNG(){
   if(typeof html2canvas!=='function'){ alert('Загрузка модуля снимка… повтори через секунду'); loadH2C(); return; }
@@ -1068,7 +1221,7 @@ function exportPNG(){
 }
 function loadH2C(){ if(window._h2c)return; window._h2c=1; const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; document.head.appendChild(s); }
 loadH2C();
-$('btn-csv')&&$('btn-csv').addEventListener('click',exportCSV);
+$('btn-csv')&&$('btn-csv').addEventListener('click',exportXLSX);
 $('btn-snap')&&$('btn-snap').addEventListener('click',exportPNG);
 
 /* ───────── Init ───────── */
@@ -1085,6 +1238,7 @@ fetchPairsHist();setInterval(fetchPairsHist,POLL_KEYRATE);
 fetchCbr();      setInterval(fetchCbr,POLL_KEYRATE);
 fetchDebt();    setInterval(fetchDebt,POLL_KEYRATE>600000?600000:POLL_KEYRATE);
 fetchInflation();setInterval(fetchInflation,POLL_KEYRATE);
+recordTape();   setInterval(recordTape,POLL);   // лента внутридневной истории для Excel
 scheduleFit();
 </script>
 </body>
