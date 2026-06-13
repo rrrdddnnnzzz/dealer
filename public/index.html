@@ -285,6 +285,31 @@
     .oz-price{font-size:2.2rem}
   }
   @media(max-width:460px){.terms,.fx-cards{grid-template-columns:1fr}.oz-block{flex-basis:50%}}
+
+  /* ───────── Модальное меню параметров спреда ───────── */
+  .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(3px);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px}
+  .modal-ov[hidden]{display:none}
+  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:18px;width:min(860px,96vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55)}
+  .modal-h{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.04em}
+  .modal-h button{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;line-height:1}
+  .modal-body{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:20px;overflow:auto}
+  .modal-f{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border)}
+  .modal-f button,.mform #sp-add{font-family:var(--mono);font-size:12px;padding:9px 15px;border-radius:9px;cursor:pointer;border:1px solid var(--border2);background:var(--bg);color:var(--text1)}
+  .modal-f #sp-save{background:var(--violet);border-color:var(--violet);color:#0d0f14;font-weight:600}
+  .mform label{display:flex;flex-direction:column;gap:5px;font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:12px}
+  .mform input{font-family:var(--mono);font-size:14px;padding:8px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg);color:var(--text1)}
+  .mform #sp-add{margin-top:6px}
+  .gh-sm{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);margin:0 0 9px}
+  .fwd-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+  .fwd-row input.yr{width:62px}.fwd-row input.rt{width:96px}
+  .fwd-row .yr-l,.fwd-row .pct{font-family:var(--mono);font-size:11px;color:var(--text3)}
+  .fwd-row .rm{border:none;background:none;color:var(--red);cursor:pointer;font-size:13px}
+  .mform .hint{font-family:var(--mono);font-size:10px;color:var(--text3);line-height:1.5;margin-top:12px}
+  .mlogic{font-family:var(--sans);font-size:12.5px;line-height:1.55;color:var(--text2);border-left:1px solid var(--border);padding-left:20px}
+  .mlogic p{margin:0 0 10px}
+  .mlogic code{font-family:var(--mono);font-size:11px;background:var(--bg);padding:1px 5px;border-radius:4px;color:var(--teal)}
+  .mlogic b{color:var(--text1)}
+  @media(max-width:760px){.modal-body{grid-template-columns:1fr}.mlogic{border-left:none;border-top:1px solid var(--border);padding-left:0;padding-top:16px}}
 </style>
 </head>
 <body>
@@ -407,7 +432,7 @@
 
     <!-- ───────── ОБЛИГАЦИЯ OZON (крупные метрики + график + параметры) ───────── -->
     <div class="panel bond">
-      <div class="p-head"><span class="p-ico">📜</span><span class="p-title">ОБЛИГАЦИЯ · OZON</span><span class="head-chip v" id="bond-name">——</span><span class="head-chip" id="bond-isin">RU000A10EXZ9 · TQCB</span><a class="src-link" href="https://www.moex.com/ru/issue.aspx?board=TQCB&code=RU000A10EXZ9" target="_blank" rel="noopener" style="margin-left:auto">MOEX ↗</a></div>
+      <div class="p-head"><span class="p-ico">📜</span><span class="p-title">ОБЛИГАЦИЯ · OZON</span><span class="head-chip v" id="bond-name">——</span><span class="head-chip" id="bond-isin">RU000A10EXZ9 · TQCB</span><button class="head-chip" id="sp-open" title="Параметры расчёта справедливого спреда к КС" style="margin-left:auto;cursor:pointer">⚙ Параметры спреда</button><a class="src-link" href="https://www.moex.com/ru/issue.aspx?board=TQCB&code=RU000A10EXZ9" target="_blank" rel="noopener" style="margin-left:10px">MOEX ↗</a></div>
       <div class="err" id="err-bond"></div>
       <div class="bond-body">
         <div>
@@ -502,6 +527,36 @@
   </div>
 </div>
 </div></div><!-- /#fit /.fithost -->
+
+<!-- ───────── МЕНЮ ПАРАМЕТРОВ СПРАВЕДЛИВОГО СПРЕДА К КС ───────── -->
+<div class="modal-ov" id="spread-modal" hidden>
+  <div class="modal">
+    <div class="modal-h"><span>⚙ Параметры справедливого спреда к КС</span><button id="sp-close" title="Закрыть">✕</button></div>
+    <div class="modal-body">
+      <div class="mform">
+        <div class="gh-sm">Параметры расчёта</div>
+        <label>Контрактный спред к КС, % (из проспекта)<input type="number" step="0.01" id="sp-spread"></label>
+        <label>Лаг фиксации КС, дн (допущение модели)<input type="number" step="1" id="sp-lag"></label>
+        <div class="gh-sm" style="margin-top:8px">Форвардная кривая КС (из IRS KEYRATE)</div>
+        <div id="sp-fwd"></div>
+        <button id="sp-add" type="button">+ точка кривой</button>
+        <div class="hint">«≤ год» — поток, гасящийся в пределах этого года, дисконтируется по указанной форвардной КС. Кривая влияет на результат; контрактный спред — только для подписи «контракт +N».</div>
+      </div>
+      <div class="mlogic">
+        <div class="gh-sm">Как считается</div>
+        <p>Озон 1P-02 — <b>флоатер</b>: купон = <b>КС + спред</b>. Ищем постоянный спред <code>s</code> к КС, при котором приведённая стоимость потоков равна рыночной (грязной) цене. Это вменённая рынком кредитная премия (дисконт-маржа).</p>
+        <p><b>Live с MOEX:</b> чистая цена, НКД, YTM, дата погашения, период купона, номинал.<br><b>Задаётся здесь:</b> контрактный спред и форвардная кривая КС.</p>
+        <p><b>Алгоритм:</b><br>
+        1. Даты купонов — шаг назад от погашения по периоду.<br>
+        2. Для потока через <code>t</code> лет: купон от КС = <code>фвдКС(t)·(дн/365)·номинал</code>, дисконт-фактор <code>(1+YTM)^t</code>.<br>
+        3. <code>A</code> = Σ(купон от КС)/df + номинал/df — это PV при спреде = 0; &nbsp;<code>B</code> = Σ(дн/365·номинал)/df — чувствительность к спреду.<br>
+        4. PV линейна по спреду, поэтому решаем напрямую: <code>s = (грязная цена − A) / B</code>.</p>
+        <p>Дисконтируем по <b>рыночной YTM</b> (конвенция расчёта коллег). Результат — в б.п. Это <b>не Z-спред</b> (тот — надбавка ко всей кривой ОФЗ, берётся готовым из MOEX).</p>
+      </div>
+    </div>
+    <div class="modal-f"><button id="sp-reset" type="button">Сбросить к умолчанию</button><button id="sp-save" type="button">Сохранить и пересчитать</button></div>
+  </div>
+</div>
 
 <script>
 let KEY_RATE = 14.5;          // ключевая ставка ЦБ (тянется с /api/keyrate)
@@ -1062,6 +1117,46 @@ async function fetchInflation(){
     }
   }catch(e){/* оставляем плейсхолдер */}
 }
+/* ───────── Параметры «справедливого спреда к КС» (меню ⚙, хранятся в localStorage) ───────── */
+const SPREAD_DEFAULTS={ spread:2.5, fixLagDays:5, fwdKs:[[1,13.14],[2,11.54],[3,12.42],[4,12.69],[5,12.86]] };
+let spreadParams=(function(){ try{const s=JSON.parse(localStorage.getItem('spreadParams')); if(s&&Array.isArray(s.fwdKs)&&s.fwdKs.length) return s;}catch(_){} return JSON.parse(JSON.stringify(SPREAD_DEFAULTS)); })();
+// клиентский расчёт дисконт-маржи (зеркало api/bond.js, но с пользовательскими параметрами)
+function fairSpreadFront(j){
+  if(!j||j.last==null||j.ytm==null||!j.matDate) return null;
+  const today=new Date(), mat=new Date(j.matDate); if(!(mat>today)) return null;
+  const pd=j.couponPeriod||30, y=j.ytm/100, dayMs=864e5, face=j.face||1000;
+  const dirty=(j.last/100)*face+(j.nkd||0);
+  const fwd=spreadParams.fwdKs.slice().sort((a,b)=>a[0]-b[0]);
+  if(!fwd.length) return null;
+  const fwdAt=yrs=>{const yr=Math.max(1,Math.floor(yrs)+1); for(const[yy,rr]of fwd) if(yr<=yy) return rr/100; return fwd[fwd.length-1][1]/100;};
+  const dates=[]; for(let d=new Date(mat); d>today; d=new Date(d.getTime()-pd*dayMs)) dates.unshift(new Date(d));
+  let A=0,B=0;
+  for(const cd of dates){ const t=(cd-today)/dayMs/365; if(t<=0)continue; const ks=fwdAt(t), df=Math.pow(1+y,t); A+=ks*(pd/365)*face/df; B+=(pd/365)*face/df; }
+  A+=face/Math.pow(1+y,(mat-today)/dayMs/365);
+  if(B===0) return null;
+  return (dirty-A)/B;   // доля
+}
+function spReadForm(){
+  const rows=[...document.querySelectorAll('#sp-fwd .fwd-row')].map(r=>[+r.querySelector('.yr').value,+r.querySelector('.rt').value]).filter(p=>isFinite(p[0])&&isFinite(p[1])).sort((a,b)=>a[0]-b[0]);
+  return { spread:+$('sp-spread').value||0, fixLagDays:+$('sp-lag').value||0, fwdKs:rows.length?rows:JSON.parse(JSON.stringify(SPREAD_DEFAULTS.fwdKs)) };
+}
+function spRenderFwd(){
+  const c=$('sp-fwd'); if(!c) return;
+  c.innerHTML=spreadParams.fwdKs.map((p,i)=>`<div class="fwd-row"><span class="yr-l">≤ год</span><input class="yr" type="number" min="1" step="1" value="${p[0]}"><input class="rt" type="number" step="0.01" value="${p[1]}"><span class="pct">% КС</span><button class="rm" data-i="${i}" title="удалить">✕</button></div>`).join('');
+  c.querySelectorAll('.rm').forEach(b=>b.onclick=()=>{ spreadParams=spReadForm(); spreadParams.fwdKs.splice(+b.dataset.i,1); spRenderFwd(); });
+}
+function spOpen(){ if(!$('spread-modal'))return; $('sp-spread').value=spreadParams.spread; $('sp-lag').value=spreadParams.fixLagDays; spRenderFwd(); $('spread-modal').hidden=false; }
+function spClose(){ $('spread-modal').hidden=true; }
+function spAdd(){ spreadParams=spReadForm(); const last=spreadParams.fwdKs[spreadParams.fwdKs.length-1]; spreadParams.fwdKs.push([last?last[0]+1:1, last?last[1]:13]); spRenderFwd(); }
+function spSave(){ spreadParams=spReadForm(); localStorage.setItem('spreadParams',JSON.stringify(spreadParams)); if(lastBond) renderBond(); spClose(); }
+function spReset(){ spreadParams=JSON.parse(JSON.stringify(SPREAD_DEFAULTS)); localStorage.removeItem('spreadParams'); spOpen(); }
+$('sp-open')&&$('sp-open').addEventListener('click',spOpen);
+$('sp-close')&&$('sp-close').addEventListener('click',spClose);
+$('sp-add')&&$('sp-add').addEventListener('click',spAdd);
+$('sp-save')&&$('sp-save').addEventListener('click',spSave);
+$('sp-reset')&&$('sp-reset').addEventListener('click',spReset);
+$('spread-modal')&&$('spread-modal').addEventListener('click',e=>{ if(e.target.id==='spread-modal') spClose(); });
+
 /* ───────── Облигация OZON (RU000A10EXZ9, TQCB) ───────── */
 let lastBond=null;
 function renderBond(j){
@@ -1080,12 +1175,13 @@ function renderBond(j){
   // Z-спред MOEX (поле ZSPREAD, в %) → бп
   if(j.zspread!=null){const bp=Math.round(j.zspread*100);$('b-zspread').innerHTML=`${bp>=0?'+':''}${bp}<span style="font-size:.5em"> бп</span>`;}
   else $('b-zspread').textContent='——';
-  // справедливый (вменённый) спред к КС — модель дисконт-маржи по форвардной кривой КС (расчёт на бэке)
-  if(j.fairSpreadBp!=null){
-    const bp=j.fairSpreadBp;
-    $('b-kspread').innerHTML=`${bp>=0?'+':''}${bp}<span style="font-size:.5em"> бп</span>`;
-    const cmp=(j.contractSpreadBp!=null)?` · контракт +${j.contractSpreadBp}`:'';
-    $('b-kspread-sm').textContent=`дисконт-маржа к фвд-КС${cmp}`;
+  // справедливый (вменённый) спред к КС — дисконт-маржа с параметрами из меню ⚙ (бэк — запас)
+  const fsFront=fairSpreadFront(j);
+  const fsBp=fsFront!=null?Math.round(fsFront*10000):(j.fairSpreadBp!=null?j.fairSpreadBp:null);
+  if(fsBp!=null){
+    $('b-kspread').innerHTML=`${fsBp>=0?'+':''}${fsBp}<span style="font-size:.5em"> бп</span>`;
+    const cbp=Math.round((spreadParams.spread||0)*100);
+    $('b-kspread-sm').textContent=`дисконт-маржа к фвд-КС · контракт +${cbp}`;
   } else $('b-kspread').textContent='——';
   // параметры
   $('b-nkd').textContent=j.nkd!=null?f2(j.nkd)+' ₽':'——';
