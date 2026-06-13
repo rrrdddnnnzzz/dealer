@@ -207,11 +207,12 @@
   /* ───────── ВКЛАДКА «СВОДКА» — bento ───────── */
   .bento{display:grid;gap:14px;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;
     grid-template-areas:
-      "rt    kc    ruonia infl"
-      "cny   title title  ozon"
-      "usd   title title  bond"
-      "eur   ofz   rgbi   swap";
+      "rt    rt    kc    ruonia"
+      "cny   ozon  ozon  infl"
+      "cny   usd   eur   bond"
+      "swap  ofz   rgbi  bond";
     min-height:calc(100vh / var(--ui-zoom) - 110px)}
+  .bt.big .val{font-size:clamp(2.4rem,4.4vw,4.2rem)}
   .bt{background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:18px 22px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;overflow:hidden;position:relative;min-height:0}
   .bt .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
   .bt .val{font-family:var(--mono);font-weight:300;font-size:clamp(1.7rem,3vw,3rem);line-height:1;color:var(--text1);letter-spacing:-.02em}
@@ -227,13 +228,6 @@
   .bt.violet::before{background:linear-gradient(90deg,transparent,var(--violet),transparent)}
   .bt.green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
   .bt.rose::before{background:linear-gradient(90deg,transparent,var(--rose),transparent)}
-  /* центральная плашка-вордмарк */
-  .bt.title{align-items:center;justify-content:center;text-align:center;gap:8px;background:radial-gradient(120% 120% at 50% 0%,rgba(167,139,250,.10),rgba(19,22,30,.6) 60%);border-color:var(--border2)}
-  .bt.title::before{display:none}
-  .bt.title .wm{font-family:var(--sans);font-weight:600;font-size:clamp(2rem,4.6vw,3.8rem);line-height:1;letter-spacing:-.02em;
-    background:linear-gradient(100deg,#a5b4fc 0%,#f0abfc 28%,#fca5a5 50%,#fcd34d 70%,#86efac 86%,#7dd3fc 100%);
-    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
-  .bt.title .wmsub{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--text3)}
   /* класс display переопределяет атрибут [hidden] — гасим явно */
   .board[hidden],.bento[hidden]{display:none}
   @media(max-width:900px){
@@ -493,23 +487,18 @@
 
   <!-- ───────── ВКЛАДКА «СВОДКА» (bento — стиль Apple keynote) ───────── -->
   <div class="bento" id="bento" hidden>
-    <div class="bt rate"  style="grid-area:rt"  id="bt-rt"><div class="lbl">RUSFAR RT · O/N</div><div class="val">——</div><div class="sub"></div></div>
-    <div class="bt rate"  style="grid-area:kc"  id="bt-kc"><div class="lbl">Ключевая ставка ЦБ</div><div class="val">——</div><div class="sub">ЦБ РФ</div></div>
-    <div class="bt rate"  style="grid-area:ruonia" id="bt-ruonia"><div class="lbl">RUONIA</div><div class="val">——</div><div class="sub">o/n необесп.</div></div>
-    <div class="bt rose"  style="grid-area:infl" id="bt-infl"><div class="lbl">Инфляция</div><div class="val">——</div><div class="sub">г/г</div></div>
-
-    <div class="bt amber" style="grid-area:cny"  id="bt-cny"><div class="lbl">Юань CNYRUB · TOD</div><div class="val">——</div><div class="sub"></div></div>
-    <div class="bt violet" style="grid-area:ozon" id="bt-ozon"><div class="lbl">Акция OZON</div><div class="val">——</div><div class="sub"></div></div>
-
-    <div class="bt title" style="grid-area:title"><div class="wm">Казначейство</div><div class="wmsub">live · MOEX ISS</div></div>
-
-    <div class="bt cyan"  style="grid-area:usd"  id="bt-usd"><div class="lbl">USD / RUB</div><div class="val">——</div><div class="sub"></div></div>
-    <div class="bt violet" style="grid-area:bond" id="bt-bond"><div class="lbl">Облигация OZON · YTM</div><div class="val">——</div><div class="sub"></div></div>
-
-    <div class="bt cyan"  style="grid-area:eur"  id="bt-eur"><div class="lbl">EUR / RUB</div><div class="val">——</div><div class="sub"></div></div>
-    <div class="bt green" style="grid-area:ofz"  id="bt-ofz"><div class="lbl">ОФЗ · 10 лет</div><div class="val">——</div><div class="sub">G-curve</div></div>
-    <div class="bt green" style="grid-area:rgbi" id="bt-rgbi"><div class="lbl">RGBI · индекс ОФЗ</div><div class="val">——</div><div class="sub"></div></div>
-    <div class="bt amber" style="grid-area:swap" id="bt-swap"><div class="lbl">Своп CNY · перенос</div><div class="val">——</div><div class="sub">% годовых</div></div>
+    <div class="bt rate big"   style="grid-area:rt"     id="bt-rt"><div class="lbl">RUSFAR RT · O/N</div><div class="val">——</div><div class="sub"></div></div>
+    <div class="bt rate"       style="grid-area:kc"     id="bt-kc"><div class="lbl">Ключевая ставка ЦБ</div><div class="val">——</div><div class="sub">ЦБ РФ</div></div>
+    <div class="bt rate"       style="grid-area:ruonia" id="bt-ruonia"><div class="lbl">RUONIA</div><div class="val">——</div><div class="sub">o/n необесп.</div></div>
+    <div class="bt amber big"  style="grid-area:cny"    id="bt-cny"><div class="lbl">Юань CNYRUB · TOD</div><div class="val">——</div><div class="sub"></div></div>
+    <div class="bt violet big" style="grid-area:ozon"   id="bt-ozon"><div class="lbl">Акция OZON</div><div class="val">——</div><div class="sub"></div></div>
+    <div class="bt rose"       style="grid-area:infl"   id="bt-infl"><div class="lbl">Инфляция</div><div class="val">——</div><div class="sub">г/г</div></div>
+    <div class="bt cyan"       style="grid-area:usd"    id="bt-usd"><div class="lbl">USD / RUB</div><div class="val">——</div><div class="sub"></div></div>
+    <div class="bt cyan"       style="grid-area:eur"    id="bt-eur"><div class="lbl">EUR / RUB</div><div class="val">——</div><div class="sub"></div></div>
+    <div class="bt violet big" style="grid-area:bond"   id="bt-bond"><div class="lbl">Облигация OZON · YTM</div><div class="val">——</div><div class="sub"></div></div>
+    <div class="bt amber"      style="grid-area:swap"   id="bt-swap"><div class="lbl">Своп CNY · перенос</div><div class="val">——</div><div class="sub">% годовых</div></div>
+    <div class="bt green"      style="grid-area:ofz"    id="bt-ofz"><div class="lbl">ОФЗ · 10 лет</div><div class="val">——</div><div class="sub">G-curve</div></div>
+    <div class="bt green"      style="grid-area:rgbi"   id="bt-rgbi"><div class="lbl">RGBI · индекс ОФЗ</div><div class="val">——</div><div class="sub"></div></div>
   </div>
 </div>
 </div></div><!-- /#fit /.fithost -->
