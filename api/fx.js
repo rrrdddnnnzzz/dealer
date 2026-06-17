@@ -25,9 +25,10 @@ export default async function handler(req, res) {
     if (!md?.columns) return res.status(502).json({ error: 'MOEX не вернул marketdata' });
 
     const sCol = {}; (sc?.columns || []).forEach((c, i) => { sCol[c] = i; });
-    const prevMap = {};
+    const prevMap = {}, prevDateMap = {};
     for (const row of (sc?.data || [])) {
       prevMap[row[sCol.SECID]] = row[sCol.PREVPRICE];
+      prevDateMap[row[sCol.SECID]] = row[sCol.PREVDATE];
     }
 
     const mCol = {}; md.columns.forEach((c, i) => { mCol[c] = i; });
@@ -36,9 +37,11 @@ export default async function handler(req, res) {
       if (!row) return null;
       const o = {}; md.columns.forEach((c, i) => { o[c] = row[i]; });
       const prev = prevMap[secid];
+      const live = o.LAST != null;                 // есть живая котировка (идут торги)
       return {
         secid,
-        last:       o.LAST,
+        last:       o.LAST ?? prev,                 // нет торгов → закрытие пред. дня
+        live,
         open:       o.OPEN,
         high:       o.HIGH,
         low:        o.LOW,
@@ -57,10 +60,14 @@ export default async function handler(req, res) {
 
     const spread = (tom?.last != null && tod?.last != null)
       ? +(tom.last - tod.last).toFixed(4) : null;
+    const anyLive = (tod && tod.live) || (tom && tom.live);   // идут ли торги
+    const asOfDate = prevDateMap[TOM] || prevDateMap[TOD] || null;
 
     res.setHeader('Cache-Control', 's-maxage=20, stale-while-revalidate=40');
     return res.status(200).json({
       tod, tom, spread,
+      closed:       !anyLive,                       // true → показаны цены закрытия
+      asOfDate,                                     // дата закрытия (YYYY-MM-DD)
       exchangeTime: tom?.updateTime || tod?.updateTime || null,
       sysTime:      tom?.sysTime || tod?.sysTime || null,
       fetchedAt:    new Date().toISOString(),

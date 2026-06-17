@@ -784,12 +784,15 @@ function renderFx(j){
 async function fetchFx(){
   let j=null;
   try{ const r=await fetch('/api/fx'); if(r.ok){ j=await r.json(); if(j.error)j=null; } }catch(_){ j=null; }
-  if(j && j.tod && j.tod.last!=null){
+  if(j && j.tod && j.tod.last!=null && !j.closed){
+    // идут торги — живые данные
     LS.set('cacheFx',{j,d:dmNow(),t:j.exchangeTime||mskNow()});
     fxAsOfC=null; renderFx(j);
   }else{
+    // рынок закрыт / пусто: кэш последней сессии, иначе закрытие пред. дня от бэка
     const c=LS.get('cacheFx');
     if(c){ fxAsOfC=c; renderFx(c.j); }
+    else if(j && j.tod && j.tod.last!=null){ fxAsOfC={d:(j.asOfDate?j.asOfDate.slice(5).split('-').reverse().join('.'):'пред.'),t:'закрытие'}; renderFx(j); }
     else { $('err-fx').textContent='⚠ MOEX FX: нет данных'; $('err-fx').style.display='block'; }
   }
   cd=Math.round(POLL/1000);
