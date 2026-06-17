@@ -63,6 +63,7 @@
   /* компактные плашки в шапке панели */
   .head-chip{font-family:var(--mono);font-size:10px;color:var(--text2);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px 8px;white-space:nowrap}
   .head-chip.a{background:var(--amber-dim);color:var(--amber);border:none}
+  .head-chip.stale{background:var(--amber-dim);color:var(--amber);border:none}
 
   /* hero cards — компактные, в один ряд */
   .hrow{display:flex;gap:10px;margin-bottom:10px}
@@ -487,7 +488,7 @@
 
     <!-- ───────── ДОЛГОВОЙ РЫНОК · ОФЗ (в самом низу, компактная лента) ───────── -->
     <div class="panel debt">
-      <div class="p-head"><span class="p-ico">₿</span><span class="p-title">ДОЛГОВОЙ РЫНОК · ОФЗ</span><a class="src-link" href="https://www.moex.com/ru/marketdata/indices/state/g-curve/" target="_blank" rel="noopener" style="margin-left:auto">MOEX ↗</a></div>
+      <div class="p-head"><span class="p-ico">₿</span><span class="p-title">ДОЛГОВОЙ РЫНОК · ОФЗ</span><span class="head-chip stale" id="debt-asof" style="margin-left:auto;display:none"></span><a class="src-link" href="https://www.moex.com/ru/marketdata/indices/state/g-curve/" target="_blank" rel="noopener" style="margin-left:10px">MOEX ↗</a></div>
       <div class="err" id="err-debt"></div>
       <div class="debt-band">
         <div class="chart-card" style="padding:8px 10px">
@@ -582,6 +583,10 @@ function carryDays(from){
   do{ d.setDate(d.getDate()+1); n++; } while(!isBizDay(d) && n<15);
   return n||1;
 }
+
+/* ── кэш последних данных: рынок закрыт → показываем последнее значение + «данные на …» ── */
+const LS={get:k=>{try{return JSON.parse(localStorage.getItem(k));}catch(_){return null;}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(_){}}};
+const dmNow=()=>new Date().toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'});
 
 function spread(val){
   if(val==null) return {str:'——',cls:''};
@@ -746,7 +751,7 @@ function fxCard(p,prefix){
   const was=(p.last!=null&&p.changePct!=null)?` · вчера ${f4(p.last/(1+p.changePct/100))}`:'';
   $(`${prefix}-t`).textContent=(p.updateTime||'——')+was;
 }
-let lastFx=null;
+let lastFx=null, fxAsOfC=null;
 function renderFx(j){
   $('err-fx').style.display='none';
   fxCard(j.tod,'tod');
@@ -765,8 +770,9 @@ function renderFx(j){
     }
   }
   lastFx={tod:j.tod,tom:j.tom,spread:j.spread,pct,ann,days:cdays};
-  const exch=j.exchangeTime||'——';
-  $('fx-banner-txt').innerHTML=`🕓 биржа ${exch} · получено ${mskNow()}`;
+  const fb=$('fx-banner-txt');
+  if(fxAsOfC){ fb.innerHTML=`⛔ рынок закрыт · данные на ${fxAsOfC.d} ${fxAsOfC.t}`; fb.classList.add('stale'); }
+  else { fb.innerHTML=`🕓 биржа ${j.exchangeTime||'——'} · получено ${mskNow()}`; fb.classList.remove('stale'); }
 
   // живой LAST для синхронизации со свечным графиком
   if(j.tod) fxLast['CNY000000TOD']={last:j.tod.last,pct:j.tod.changePct};
@@ -776,11 +782,17 @@ function renderFx(j){
 }
 
 async function fetchFx(){
-  try{
-    const r=await fetch('/api/fx'); if(!r.ok)throw new Error(`HTTP ${r.status}`);
-    const j=await r.json(); if(j.error)throw new Error(j.error);
-    renderFx(j); cd=Math.round(POLL/1000);
-  }catch(e){ $('err-fx').textContent=`⚠ MOEX FX: ${e.message}`; $('err-fx').style.display='block'; }
+  let j=null;
+  try{ const r=await fetch('/api/fx'); if(r.ok){ j=await r.json(); if(j.error)j=null; } }catch(_){ j=null; }
+  if(j && j.tod && j.tod.last!=null){
+    LS.set('cacheFx',{j,d:dmNow(),t:j.exchangeTime||mskNow()});
+    fxAsOfC=null; renderFx(j);
+  }else{
+    const c=LS.get('cacheFx');
+    if(c){ fxAsOfC=c; renderFx(c.j); }
+    else { $('err-fx').textContent='⚠ MOEX FX: нет данных'; $('err-fx').style.display='block'; }
+  }
+  cd=Math.round(POLL/1000);
 }
 
 /* ───────── Свечной график CNYRUB (live, MOEX ISS) ───────── */
@@ -1003,7 +1015,7 @@ function renderPairs(list){
 }
 // порядок карточек и кэш последних значений (чтобы пара не исчезала при пропуске ответа)
 const PAIR_ORDER=['USD/RUB','EUR/RUB','KZT/RUB','BYN/RUB','USD/KZT','EUR/KZT'];
-const pairCache={};
+const pairCache=LS.get('cachePairs')||{};
 // всегда рисуем все плашки: пришедшие — обновлены, отсутствующие — последнее значение, новые — плейсхолдер «——»
 function renderPairsFromCache(){
   const ordered=PAIR_ORDER.map(k=>pairCache[k]||{pair:k,val:null});
@@ -1016,6 +1028,7 @@ async function fetchPairs(){
     const j=await r.json(); if(j.error)throw new Error(j.error);
     // обновляем кэш только пришедшими парами; отсутствующие сохраняют прошлое значение
     (j.pairs||[]).forEach(p=>{ if(p&&p.pair) pairCache[p.pair]=p; });
+    LS.set('cachePairs',pairCache);
     $('err-pairs').style.display='none';
   }catch(e){ $('err-pairs').textContent=`⚠ ${e.message} · показаны последние значения`; $('err-pairs').style.display='block'; }
   renderPairsFromCache();   // плашки не исчезают никогда
@@ -1086,12 +1099,19 @@ function renderDebt(j){
   if(lastBond) renderBond();   // пересчитать спред облигации к ОФЗ
   scheduleFit();
 }
+function debtAsOf(c){ const el=$('debt-asof'); if(!el)return; if(c){ el.textContent=`⛔ закрыт · данные на ${c.d} ${c.t}`; el.style.display=''; } else el.style.display='none'; }
 async function fetchDebt(){
-  try{
-    const r=await fetch('/api/debt'); if(!r.ok)throw new Error(`HTTP ${r.status}`);
-    const j=await r.json(); if(j.error)throw new Error(j.error);
-    renderDebt(j);
-  }catch(e){ $('err-debt').textContent=`⚠ ${e.message}`; $('err-debt').style.display='block'; }
+  let j=null;
+  try{ const r=await fetch('/api/debt'); if(r.ok){ j=await r.json(); if(j.error)j=null; } }catch(_){ j=null; }
+  const usable = j && ((j.ofz&&j.ofz.points&&j.ofz.points.length>=2)||(j.rgbi&&j.rgbi.value!=null)||(j.ruonia&&j.ruonia.rate!=null));
+  if(usable){
+    LS.set('cacheDebt',{j,d:dmNow(),t:(j.ofz&&j.ofz.time)||mskNow()});
+    renderDebt(j); debtAsOf(null);
+  }else{
+    const c=LS.get('cacheDebt');
+    if(c){ renderDebt(c.j); debtAsOf(c); }
+    else { $('err-debt').textContent='⚠ нет данных'; $('err-debt').style.display='block'; }
+  }
 }
 
 /* ───────── Официальная инфляция (ЦБ РФ) ───────── */
@@ -1147,7 +1167,7 @@ $('sp-reset')&&$('sp-reset').addEventListener('click',spReset);
 $('spread-modal')&&$('spread-modal').addEventListener('click',e=>{ if(e.target.id==='spread-modal') spClose(); });
 
 /* ───────── Облигация OZON (RU000A10EXZ9, TQCB) ───────── */
-let lastBond=null;
+let lastBond=null, bondAsOfC=null;
 function renderBond(j){
   if(j) lastBond=j; else j=lastBond; if(!j) return;
   $('err-bond').style.display='none';
@@ -1184,7 +1204,8 @@ function renderBond(j){
   $('b-volt').textContent=(j.valToday!=null?fBig(j.valToday):'——')+(j.numTrades!=null?` · ${Number(j.numTrades).toLocaleString('ru-RU')} сд.`:'');
   $('b-face').textContent=j.face!=null?Number(j.face).toLocaleString('ru-RU')+' ₽':'——';
   $('b-list').textContent=j.listLevel!=null?j.listLevel:'——';
-  $('bond-foot').textContent=`⛁ MOEX ISS · TQCB${j.updateTime?' · обновлено '+j.updateTime:''}`;
+  if(bondAsOfC) $('bond-foot').textContent=`⛔ рынок закрыт · данные на ${bondAsOfC.d} ${bondAsOfC.t} · MOEX TQCB`;
+  else $('bond-foot').textContent=`⛁ MOEX ISS · TQCB${j.updateTime?' · обновлено '+j.updateTime:''}`;
   if(j.history) lastBondHist=j.history;
   drawBondChart();
   scheduleFit();
@@ -1211,11 +1232,16 @@ function drawBondChart(){
   svg.innerHTML=h;
 }
 async function fetchBond(){
-  try{
-    const r=await fetch('/api/bond'); if(!r.ok)throw new Error(`HTTP ${r.status}`);
-    const j=await r.json(); if(j.error)throw new Error(j.error);
-    renderBond(j);
-  }catch(e){ $('err-bond').textContent=`⚠ ${e.message}`; $('err-bond').style.display='block'; }
+  let j=null;
+  try{ const r=await fetch('/api/bond'); if(r.ok){ j=await r.json(); if(j.error)j=null; } }catch(_){ j=null; }
+  if(j && (j.last!=null || j.ytm!=null)){
+    LS.set('cacheBond',{j,d:dmNow(),t:j.updateTime||mskNow()});
+    bondAsOfC=null; renderBond(j);
+  }else{
+    const c=LS.get('cacheBond');
+    if(c){ bondAsOfC=c; renderBond(c.j); }
+    else { $('err-bond').textContent='⚠ нет данных'; $('err-bond').style.display='block'; }
+  }
 }
 
 /* ───────── Статус рынка MOEX (по времени МСК) ───────── */
