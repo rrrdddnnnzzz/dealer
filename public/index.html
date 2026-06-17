@@ -239,7 +239,6 @@
   .prow .l{font-size:11px;color:var(--text3)}.prow .val{font-size:13px;color:var(--text1);text-align:right}
 
   /* RUSFAR мини-кривая + carry + was→now + stale */
-  #rfcurve-svg{width:100%;height:54px;display:block}
   .was{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px}
   .was .a{color:var(--text2)}
   .cc.stale,.fxc.stale,.dcell.stale{opacity:.5}
@@ -350,11 +349,6 @@
         <div class="tc"><div class="tn" style="color:#a78bfa">2W <span class="tbadge">12:30</span></div><div class="tv skel" id="v-2W">——</div></div>
         <div class="tc"><div class="tn" style="color:#fb923c">1M <span class="tbadge">12:30</span></div><div class="tv skel" id="v-1M">——</div></div>
         <div class="tc"><div class="tn" style="color:#f472b6">3M <span class="tbadge">12:30</span></div><div class="tv skel" id="v-3M">——</div></div>
-      </div>
-
-      <div class="chart-card" style="margin-bottom:10px">
-        <div class="st">КРИВАЯ RUSFAR · СРОЧНАЯ СТРУКТУРА (ON→3M)</div>
-        <svg id="rfcurve-svg" viewBox="0 0 560 74" style="overflow:visible"></svg>
       </div>
 
       <div class="chart-card fillchart">
@@ -654,28 +648,9 @@ function renderRusfar(d){
     const sp=spread(on.currentValue); const rs=+(on.currentValue-ruoniaRate).toFixed(2);
     $('fix-foot').innerHTML=`спред к КС <span class="${sp.cls}">${sp.str}</span> · к RUONIA ${rs>=0?'+':''}${rs} пп · ${fmtDate(on.tradeDate)}`;
   }
-  drawRusfarCurve(d);
   scheduleFit();
 }
 
-// мини-кривая RUSFAR (ON→3M)
-function drawRusfarCurve(d){
-  const svg=$('rfcurve-svg'); if(!svg) return; const [W,H]=svgWH(svg,560,74);
-  const PL=8,PR=40,PT=14,PB=18;
-  const terms=[['ON',d.ON?.currentValue,'#3b82f6'],['1W',d['1W']?.currentValue,'#2dd4bf'],['2W',d['2W']?.currentValue,'#a78bfa'],['1M',d['1M']?.currentValue,'#fb923c'],['3M',d['3M']?.currentValue,'#f472b6']];
-  const pts=terms.filter(t=>t[1]!=null);
-  if(pts.length<2){svg.innerHTML='';return}
-  const vals=pts.map(p=>p[1]),mn=Math.min(...vals),mx=Math.max(...vals);
-  const pad=(mx-mn)*0.3||0.05,lo=mn-pad,hi=mx+pad;
-  const sx=i=>PL+(i/(pts.length-1))*(W-PL-PR), sy=v=>PT+(1-(v-lo)/(hi-lo))*(H-PT-PB);
-  const line=pts.map((p,i)=>`${i===0?'M':'L'}${sx(i).toFixed(1)},${sy(p[1]).toFixed(1)}`).join(' ');
-  let h=`<path d="${line}" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linejoin="round"/>`;
-  pts.forEach((p,i)=>{const x=sx(i).toFixed(1),y=sy(p[1]).toFixed(1);
-    h+=`<circle cx="${x}" cy="${y}" r="3" fill="${p[2]}"/>`+
-       `<text x="${x}" y="${+y-6}" text-anchor="middle" style="font-family:var(--mono);font-size:8.5px;fill:${p[2]}">${f2(p[1])}</text>`+
-       `<text x="${x}" y="${H-4}" text-anchor="middle" style="font-family:var(--mono);font-size:8.5px;fill:#475569">${p[0]}</text>`;});
-  svg.innerHTML=h;
-}
 
 async function fetchRusfar(){
   try{
