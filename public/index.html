@@ -870,13 +870,17 @@ function renderChart(){
   }
 }
 
+const candleCache={};   // key `${secid}|${interval}` → последние нормальные свечи (не мигать при пустом ответе)
 async function fetchCandles(){
+  const key=`${chSec}|${chInt}`;
+  let cands=null;
   try{
     const r=await fetch(`/api/candles?secid=${chSec}&interval=${chInt}`);
-    if(!r.ok)throw new Error(`HTTP ${r.status}`);
-    const j=await r.json(); if(j.error)throw new Error(j.error);
-    chCandles=j.candles||[]; renderChart();
-  }catch(e){ chCandles=[]; renderChart(); }
+    if(r.ok){ const j=await r.json(); if(!j.error && Array.isArray(j.candles)) cands=j.candles; }
+  }catch(_){}
+  if(cands && cands.length>=2){ candleCache[key]=cands; chCandles=cands; }
+  else { chCandles=candleCache[key]||[]; }   // пусто/ошибка → показываем последние нормальные свечи этого инструмента
+  renderChart();
 }
 
 document.querySelectorAll('#sec-seg .sb').forEach(b=>b.addEventListener('click',()=>{
