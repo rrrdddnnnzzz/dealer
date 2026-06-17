@@ -1393,10 +1393,8 @@ function renderBento(){
   h+=srow('RUSFAR realtime O/N', P(r.RT?.currentValue), dPP(r.RT?.change));
   h+=srow('RUSFAR compound O/N', P(r.NC?.currentValue), dPP(r.NC?.change));
   h+=srow('RUSFAR фикс O/N (12:30)', P(r.ON?.currentValue), dPP(r.ON?.change));
-  h+=srow('RUSFAR 1W', P(r['1W']?.currentValue));
-  h+=srow('RUSFAR 2W', P(r['2W']?.currentValue));
-  h+=srow('RUSFAR 1M', P(r['1M']?.currentValue));
-  h+=srow('RUSFAR 3M', P(r['3M']?.currentValue));
+  const tv=t=>r[t]?.currentValue!=null?f2(r[t].currentValue):'—';
+  h+=srow('RUSFAR 1W · 2W · 1M · 3M', `${tv('1W')} · ${tv('2W')} · ${tv('1M')} · ${tv('3M')}<i>%</i>`);
   h+=srow('RUSFAR CNY O/N', P(r.CNY?.currentValue));
   h+=srow('Ключевая ставка ЦБ', P(KEY_RATE));
   h+=srow('RUONIA', P(ruoniaRate));
@@ -1419,14 +1417,12 @@ function renderBento(){
   h='';
   const b=lastBond||{};
   let gbp=null; if(b.durationYears!=null){const oy=ofzYieldAt(b.durationYears); if(b.ytm!=null&&oy!=null) gbp=Math.round((b.ytm-oy)*100);}
-  const fs=fairSpreadFront(b); const ksbp=fs!=null?Math.round(fs*10000):(b.fairSpreadBp!=null?b.fairSpreadBp:null);
   h+=srow('Облигация OZON · цена', b.last!=null?f2(b.last)+'<i>%</i>':'——', dPct(b.changePct));
   h+=srow('Грязная цена', b.dirty!=null?Number(b.dirty).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2})+'<i>₽</i>':'——');
   h+=srow('Доходность YTM', P(b.ytm));
   h+=srow('НКД', b.nkd!=null?f2(b.nkd)+'<i>₽</i>':'——');
   h+=srow('Дюрация', b.durationDays!=null?b.durationDays+'<i>дн</i>':'——', b.durationYears!=null?{cls:'fl',str:b.durationYears+' г'}:null);
   h+=srow('Погашение', b.matDate?fmtDate(b.matDate):'——');
-  h+=srow('Справ. спред к КС', ksbp!=null?(ksbp>=0?'+':'')+ksbp+'<i>бп</i>':'——', {cls:'fl',str:`контр. ${Math.round((spreadParams.spread||0)*100)}`});
   h+=srow('Z-спред (MOEX)', b.zspread!=null?(b.zspread>=0?'+':'')+Math.round(b.zspread*100)+'<i>бп</i>':'——', {cls:'fl',str:'к ОФЗ'});
   h+=srow('Спред к ОФЗ (G)', gbp!=null?(gbp>=0?'+':'')+gbp+'<i>бп</i>':'——');
   h+=srow('ОФЗ 1 год', P(ofz1));
