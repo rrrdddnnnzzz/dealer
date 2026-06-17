@@ -27,16 +27,22 @@ export default async function handler(req, res) {
     const r = j?.rates; if (!r) return null;
     return { rub: r.RUB, eur: r.EUR, kzt: r.KZT, time: mskTime(j.timestamp) };
   }
-  // MOEX: только BYN/RUB
+  // MOEX: только BYN/RUB (с фоллбэком на закрытие пред. дня, когда нет торгов)
   async function moexByn() {
     const url = 'https://iss.moex.com/iss/engines/currency/markets/selt/boards/CETS/securities.json'
-      + '?iss.meta=off&iss.only=marketdata&securities=BYNRUB_TOM'
+      + '?iss.meta=off&iss.only=securities,marketdata&securities=BYNRUB_TOM'
+      + '&securities.columns=SECID,PREVPRICE,PREVDATE'
       + '&marketdata.columns=SECID,LAST,LASTTOPREVPRICE,UPDATETIME';
     const j = await jget(url);
-    const row = j?.marketdata?.data?.[0];
+    const md = j?.marketdata, sc = j?.securities;
+    const row = md?.data?.[0];
     if (!row) return null;
-    const col = {}; j.marketdata.columns.forEach((c, i) => { col[c] = i; });
-    return { last: row[col.LAST], pct: row[col.LASTTOPREVPRICE], time: row[col.UPDATETIME] };
+    const col = {}; md.columns.forEach((c, i) => { col[c] = i; });
+    const scol = {}; (sc?.columns || []).forEach((c, i) => { scol[c] = i; });
+    const srow = sc?.data?.[0] || [];
+    const prev = srow[scol.PREVPRICE], prevDate = srow[scol.PREVDATE];
+    const live = row[col.LAST] != null;                 // идут ли торги
+    return { last: row[col.LAST] ?? prev, live, pct: row[col.LASTTOPREVPRICE], time: row[col.UPDATETIME], prevDate };
   }
 
   try {
@@ -56,8 +62,11 @@ export default async function handler(req, res) {
       if (now.kzt) pairs.push({ pair: 'KZT/RUB', val: +(now.rub / now.kzt).toFixed(4), pct: pct(now.rub / now.kzt, (prev?.rub && prev?.kzt) ? prev.rub / prev.kzt : null), dec: 4, src: 'FX', time: t });
     }
 
-    if (byn?.last != null)
-      pairs.push({ pair: 'BYN/RUB', val: byn.last, pct: byn.pct, dec: 2, src: 'MOEX', time: byn.time });
+    if (byn?.last != null) {
+      const dm = byn.prevDate ? byn.prevDate.slice(5).split('-').reverse().join('.') : '';
+      pairs.push({ pair: 'BYN/RUB', val: byn.last, pct: byn.live ? byn.pct : null, dec: 2, src: 'MOEX',
+        time: byn.live ? byn.time : `закрытие ${dm}` });
+    }
 
     if (now?.kzt != null) {
       pairs.push({ pair: 'USD/KZT', val: +now.kzt.toFixed(2), pct: pct(now.kzt, prev?.kzt), dec: 2, src: 'FX', time: t });
