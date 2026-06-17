@@ -204,37 +204,30 @@
   .vtab{font-family:var(--mono);font-size:11px;padding:5px 12px;border-radius:6px;cursor:pointer;border:none;background:transparent;color:var(--text3);letter-spacing:.04em}
   .vtab.active{background:var(--text1);color:#0d0f14;font-weight:500}
 
-  /* ───────── ВКЛАДКА «СВОДКА» — bento ───────── */
-  .bento{display:grid;gap:14px;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;
-    grid-template-areas:
-      "rt    rt    kc    ruonia"
-      "cny   ozon  ozon  infl"
-      "cny   usd   eur   bond"
-      "swap  ofz   rgbi  bond";
-    min-height:calc(100vh / var(--ui-zoom) - 110px)}
-  .bt.big .val{font-size:clamp(2.4rem,4.4vw,4.2rem)}
-  .bt{background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:18px 22px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;overflow:hidden;position:relative;min-height:0}
-  .bt .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
-  .bt .val{font-family:var(--mono);font-weight:300;font-size:clamp(1.7rem,3vw,3rem);line-height:1;color:var(--text1);letter-spacing:-.02em}
-  .bt .val i{font-style:normal;font-size:.42em;opacity:.55;margin-left:3px}
-  .bt .sub{font-family:var(--mono);font-size:11px;color:var(--text3);line-height:1.4}
-  .bt .sub .u{color:var(--green)}.bt .sub .dn{color:var(--red)}
-  .bt.rate .val{color:var(--teal)} .bt.amber .val{color:var(--amber)} .bt.cyan .val{color:var(--cyan)}
-  .bt.violet .val{color:var(--violet)} .bt.green .val{color:var(--green)} .bt.rose .val{color:var(--rose)}
-  .bt::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:.7}
-  .bt.rate::before{background:linear-gradient(90deg,transparent,var(--teal),transparent)}
-  .bt.amber::before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
-  .bt.cyan::before{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
-  .bt.violet::before{background:linear-gradient(90deg,transparent,var(--violet),transparent)}
-  .bt.green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
-  .bt.rose::before{background:linear-gradient(90deg,transparent,var(--rose),transparent)}
+  /* ───────── ВКЛАДКА «СВОДКА» — Lite (сгруппированные списки) ───────── */
+  .bento{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  .sumcol{display:flex;flex-direction:column;gap:16px}
+  .cat{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px 18px;position:relative;overflow:hidden}
+  .cat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+  .cat.rates::before{background:linear-gradient(90deg,transparent,var(--teal),transparent)}
+  .cat.fx::before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+  .cat.debt::before{background:linear-gradient(90deg,transparent,var(--violet),transparent)}
+  .cat.eq::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+  .cat h3{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .cat.rates h3{color:var(--teal)}.cat.fx h3{color:var(--amber)}.cat.debt h3{color:var(--violet)}.cat.eq h3{color:var(--green)}
+  .lrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.045)}
+  .lrow:last-child{border-bottom:none}
+  .lrow .l{font-family:var(--mono);font-size:12px;color:var(--text3);white-space:nowrap}
+  .lrow .r{display:flex;align-items:baseline;gap:10px}
+  .lrow .v{font-family:var(--mono);font-size:16px;color:var(--text1);white-space:nowrap}
+  .lrow .v i{font-style:normal;font-size:.6em;opacity:.5;margin-left:1px}
+  .lrow .d{font-family:var(--mono);font-size:11px;min-width:62px;text-align:right;white-space:nowrap}
+  .lrow .d.u{color:var(--green)}.lrow .d.dn{color:var(--red)}.lrow .d.fl{color:var(--text3)}
   /* класс display переопределяет атрибут [hidden] — гасим явно */
   .board[hidden],.bento[hidden]{display:none}
-  @media(max-width:900px){
-    .bento{grid-template-columns:1fr 1fr;grid-template-areas:none;min-height:0}
-    .bt{grid-area:auto!important}
-    .bt.title{grid-column:1 / -1}
-    .bt .val{font-size:1.9rem}
+  @media(max-width:860px){
+    .bento{grid-template-columns:1fr}
+    .lrow .v{font-size:15px}
   }
   .bond-chart{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:11px 13px}
   #bond-svg{width:100%;height:150px;display:block}
@@ -510,20 +503,16 @@
     </div>
   </div>
 
-  <!-- ───────── ВКЛАДКА «СВОДКА» (bento — стиль Apple keynote) ───────── -->
+  <!-- ───────── ВКЛАДКА «СВОДКА» (Lite — сгруппированные списки) ───────── -->
   <div class="bento" id="bento" hidden>
-    <div class="bt rate big"   style="grid-area:rt"     id="bt-rt"><div class="lbl">RUSFAR RT · O/N</div><div class="val">——</div><div class="sub"></div></div>
-    <div class="bt rate"       style="grid-area:kc"     id="bt-kc"><div class="lbl">Ключевая ставка ЦБ</div><div class="val">——</div><div class="sub">ЦБ РФ</div></div>
-    <div class="bt rate"       style="grid-area:ruonia" id="bt-ruonia"><div class="lbl">RUONIA</div><div class="val">——</div><div class="sub">o/n необесп.</div></div>
-    <div class="bt amber big"  style="grid-area:cny"    id="bt-cny"><div class="lbl">Юань CNYRUB · TOD</div><div class="val">——</div><div class="sub"></div></div>
-    <div class="bt violet big" style="grid-area:ozon"   id="bt-ozon"><div class="lbl">Акция OZON</div><div class="val">——</div><div class="sub"></div></div>
-    <div class="bt rose"       style="grid-area:infl"   id="bt-infl"><div class="lbl">Инфляция</div><div class="val">——</div><div class="sub">г/г</div></div>
-    <div class="bt cyan"       style="grid-area:usd"    id="bt-usd"><div class="lbl">USD / RUB</div><div class="val">——</div><div class="sub"></div></div>
-    <div class="bt cyan"       style="grid-area:eur"    id="bt-eur"><div class="lbl">EUR / RUB</div><div class="val">——</div><div class="sub"></div></div>
-    <div class="bt violet big" style="grid-area:bond"   id="bt-bond"><div class="lbl">Облигация OZON · YTM</div><div class="val">——</div><div class="sub"></div></div>
-    <div class="bt amber"      style="grid-area:swap"   id="bt-swap"><div class="lbl">Своп CNY · перенос</div><div class="val">——</div><div class="sub">% годовых</div></div>
-    <div class="bt green"      style="grid-area:ofz"    id="bt-ofz"><div class="lbl">ОФЗ · 10 лет</div><div class="val">——</div><div class="sub">G-curve</div></div>
-    <div class="bt green"      style="grid-area:rgbi"   id="bt-rgbi"><div class="lbl">RGBI · индекс ОФЗ</div><div class="val">——</div><div class="sub"></div></div>
+    <div class="sumcol">
+      <div class="cat rates"><h3>● Процентные ставки</h3><div class="rows" id="sum-rates"></div></div>
+      <div class="cat eq"><h3>● Акции</h3><div class="rows" id="sum-eq"></div></div>
+    </div>
+    <div class="sumcol">
+      <div class="cat fx"><h3>● Валюты</h3><div class="rows" id="sum-fx"></div></div>
+      <div class="cat debt"><h3>● Долг и облигации</h3><div class="rows" id="sum-debt"></div></div>
+    </div>
   </div>
 </div>
 </div></div><!-- /#fit /.fithost -->
@@ -561,7 +550,7 @@
 <script>
 let KEY_RATE = 14.5;          // ключевая ставка ЦБ (тянется с /api/keyrate)
 let keyRateDate = null;
-let inflVal=null, ofz10=null, ofz1=null, rgbiVal=null;   // для вкладки «Сводка» (bento)
+let inflVal=null, inflTarget=null, ofz10=null, ofz1=null, rgbiVal=null, rgbiChg=null;   // для вкладки «Сводка»
 const POLL      = 15000;      // единый интервал опроса всех данных
 const POLL_RUSFAR = POLL;
 const POLL_FX     = POLL;
@@ -1081,7 +1070,7 @@ function renderDebt(j){
     const y10=ofzYieldAt(10); if(y10!=null){ofz10=y10;$('ofz-10y').textContent=f2(y10)+'%';}
   }
   if(j.rgbi&&j.rgbi.value!=null){
-    rgbiVal=j.rgbi.value;
+    rgbiVal=j.rgbi.value; rgbiChg=j.rgbi.changePrc;
     const cp=j.rgbi.changePrc; const cls=cp>=0?'up':'down';
     $('rgbi-v').innerHTML=`${Number(j.rgbi.value).toFixed(2)} <span class="${cls}" style="font-size:.62rem">${cp>=0?'▲':'▼'}${Math.abs(cp).toFixed(2)}%</span>`;
   }
@@ -1111,7 +1100,7 @@ async function fetchInflation(){
     const r=await fetch('/api/macro?type=inflation'); if(!r.ok)throw new Error(`HTTP ${r.status}`);
     const j=await r.json(); if(j.error)throw new Error(j.error);
     if(j.value!=null){
-      inflVal=j.value;
+      inflVal=j.value; inflTarget=j.target;
       $('infl-chip').textContent=`Инфл ${f2(j.value)}% г/г`;
       $('infl-chip').title=`Официальная инфляция ЦБ РФ: ${f2(j.value)}% г/г (${j.date}) · цель ${f2(j.target)}%`;
     }
@@ -1385,27 +1374,77 @@ loadH2C();
 $('btn-csv')&&$('btn-csv').addEventListener('click',exportXLSX);
 $('btn-snap')&&$('btn-snap').addEventListener('click',exportPNG);
 
-/* ───────── Вкладка «Сводка» (bento) ───────── */
-function btSet(id,val,sub){const el=$(id);if(!el)return;const v=el.querySelector('.val');if(v)v.innerHTML=val;if(sub!=null){const s=el.querySelector('.sub');if(s)s.innerHTML=sub;}}
-function btDelta(ch,suf){if(ch==null||isNaN(ch))return '';const up=ch>=0;return `<span class="${up?'u':'dn'}">${up?'▲':'▼'} ${Math.abs(ch).toFixed(2)}${suf||''}</span>`;}
+/* ───────── Вкладка «Сводка» (Lite — детальные сгруппированные списки) ───────── */
+// строка списка: подпись · значение · дельта (объект {cls,str} или null)
+function srow(label,value,delta){
+  const d = delta ? `<span class="d ${delta.cls}">${delta.str}</span>` : `<span class="d fl">—</span>`;
+  return `<div class="lrow"><span class="l">${label}</span><span class="r"><span class="v">${value}</span>${d}</span></div>`;
+}
+const dPP =ch=>{ if(ch==null||isNaN(ch))return null; const up=ch>=0; return {cls:up?'u':'dn',str:`${up?'▲':'▼'} ${Math.abs(ch).toFixed(2)} пп`}; };
+const dPct=p =>{ if(p==null||isNaN(p))return null; const up=p>=0; return {cls:up?'u':'dn',str:`${up?'▲':'▼'} ${Math.abs(p).toFixed(2)}%`}; };
 function renderBento(){
   const bento=$('bento'); if(!bento||bento.hidden) return;   // не считаем, когда вкладка скрыта
   const r=lastRusfar||{}, pc=pairCache;
-  const pct=v=>v!=null&&!isNaN(v)?f2(v)+'<i>%</i>':'——';
-  btSet('bt-rt', pct(r.RT?.currentValue), btDelta(r.RT?.change,' пп')||'realtime');
-  btSet('bt-kc', pct(KEY_RATE));
-  btSet('bt-ruonia', pct(ruoniaRate));
-  btSet('bt-infl', pct(inflVal));
-  btSet('bt-cny', lastFx?.tod?.last!=null?f4(lastFx.tod.last):'——',
-    lastFx?`TOM ${f4(lastFx.tom?.last)} · своп ${lastFx.ann!=null?(lastFx.ann>=0?'+':'')+lastFx.ann.toFixed(1)+'%':'—'}`:'');
-  btSet('bt-ozon', lastStockQ?.last!=null?fPrice(lastStockQ.last)+'<i>₽</i>':'——', btDelta(lastStockQ?.changePct,'%'));
-  btSet('bt-usd', pc['USD/RUB']?.val!=null?f2(pc['USD/RUB'].val)+'<i>₽</i>':'——', btDelta(pc['USD/RUB']?.pct,'%'));
-  btSet('bt-eur', pc['EUR/RUB']?.val!=null?f2(pc['EUR/RUB'].val)+'<i>₽</i>':'——', btDelta(pc['EUR/RUB']?.pct,'%'));
-  btSet('bt-bond', lastBond?.ytm!=null?f2(lastBond.ytm)+'<i>%</i>':'——',
-    lastBond?.zspread!=null?`Z-спред ${Math.round(lastBond.zspread*100)} бп`:'к погашению');
-  btSet('bt-ofz', pct(ofz10));
-  btSet('bt-rgbi', rgbiVal!=null?Number(rgbiVal).toFixed(2):'——');
-  btSet('bt-swap', lastFx?.ann!=null?(lastFx.ann>=0?'+':'')+lastFx.ann.toFixed(1)+'<i>%</i>':'——', lastFx?`перенос ${lastFx.days} дн`:'% годовых');
+  const P=v=>v!=null&&!isNaN(v)?f2(v)+'<i>%</i>':'——';
+  const N4=v=>v!=null&&!isNaN(v)?f4(v):'——';
+
+  // ── Ставки ──
+  let h='';
+  h+=srow('RUSFAR realtime O/N', P(r.RT?.currentValue), dPP(r.RT?.change));
+  h+=srow('RUSFAR compound O/N', P(r.NC?.currentValue), dPP(r.NC?.change));
+  h+=srow('RUSFAR фикс O/N (12:30)', P(r.ON?.currentValue), dPP(r.ON?.change));
+  h+=srow('RUSFAR 1W', P(r['1W']?.currentValue));
+  h+=srow('RUSFAR 2W', P(r['2W']?.currentValue));
+  h+=srow('RUSFAR 1M', P(r['1M']?.currentValue));
+  h+=srow('RUSFAR 3M', P(r['3M']?.currentValue));
+  h+=srow('RUSFAR CNY O/N', P(r.CNY?.currentValue));
+  h+=srow('Ключевая ставка ЦБ', P(KEY_RATE));
+  h+=srow('RUONIA', P(ruoniaRate));
+  if(r.ON?.currentValue!=null&&ruoniaRate!=null){const s=+(r.ON.currentValue-ruoniaRate).toFixed(2);h+=srow('RUSFAR − RUONIA', (s>=0?'+':'')+s+'<i>пп</i>');}
+  h+=srow('Инфляция г/г', P(inflVal), inflTarget!=null?{cls:'fl',str:`цель ${f2(inflTarget)}%`}:null);
+  $('sum-rates').innerHTML=h;
+
+  // ── Валюты (каждая пара отдельной строкой) ──
+  h='';
+  h+=srow('CNYRUB TOD', N4(lastFx?.tod?.last), dPct(lastFx?.tod?.changePct));
+  h+=srow('CNYRUB TOM', N4(lastFx?.tom?.last), dPct(lastFx?.tom?.changePct));
+  h+=srow('Спред TOM − TOD', lastFx?.spread!=null?(lastFx.spread>=0?'+':'')+f4(lastFx.spread)+'<i>₽</i>':'——');
+  h+=srow('Своп CNY (стоимость переноса)', lastFx?.ann!=null?(lastFx.ann>=0?'+':'')+lastFx.ann.toFixed(1)+'<i>% год.</i>':'——', lastFx?{cls:'fl',str:`перенос ${lastFx.days} дн`}:null);
+  const fxrow=(label,key,d4)=>{const x=pc[key];h+=srow(label, x&&x.val!=null?(d4?f4(x.val):f2(x.val)):'——', dPct(x?.pct));};
+  fxrow('USD / RUB','USD/RUB'); fxrow('EUR / RUB','EUR/RUB'); fxrow('KZT / RUB','KZT/RUB',true); fxrow('BYN / RUB','BYN/RUB');
+  fxrow('USD / KZT','USD/KZT'); fxrow('EUR / KZT','EUR/KZT');
+  $('sum-fx').innerHTML=h;
+
+  // ── Долг и облигации ──
+  h='';
+  const b=lastBond||{};
+  let gbp=null; if(b.durationYears!=null){const oy=ofzYieldAt(b.durationYears); if(b.ytm!=null&&oy!=null) gbp=Math.round((b.ytm-oy)*100);}
+  const fs=fairSpreadFront(b); const ksbp=fs!=null?Math.round(fs*10000):(b.fairSpreadBp!=null?b.fairSpreadBp:null);
+  h+=srow('Облигация OZON · цена', b.last!=null?f2(b.last)+'<i>%</i>':'——', dPct(b.changePct));
+  h+=srow('Грязная цена', b.dirty!=null?Number(b.dirty).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2})+'<i>₽</i>':'——');
+  h+=srow('Доходность YTM', P(b.ytm));
+  h+=srow('НКД', b.nkd!=null?f2(b.nkd)+'<i>₽</i>':'——');
+  h+=srow('Дюрация', b.durationDays!=null?b.durationDays+'<i>дн</i>':'——', b.durationYears!=null?{cls:'fl',str:b.durationYears+' г'}:null);
+  h+=srow('Погашение', b.matDate?fmtDate(b.matDate):'——');
+  h+=srow('Справ. спред к КС', ksbp!=null?(ksbp>=0?'+':'')+ksbp+'<i>бп</i>':'——', {cls:'fl',str:`контр. ${Math.round((spreadParams.spread||0)*100)}`});
+  h+=srow('Z-спред (MOEX)', b.zspread!=null?(b.zspread>=0?'+':'')+Math.round(b.zspread*100)+'<i>бп</i>':'——', {cls:'fl',str:'к ОФЗ'});
+  h+=srow('Спред к ОФЗ (G)', gbp!=null?(gbp>=0?'+':'')+gbp+'<i>бп</i>':'——');
+  h+=srow('ОФЗ 1 год', P(ofz1));
+  h+=srow('ОФЗ 10 лет', P(ofz10));
+  h+=srow('RGBI', rgbiVal!=null?Number(rgbiVal).toFixed(2):'——', dPct(rgbiChg));
+  $('sum-debt').innerHTML=h;
+
+  // ── Акции ──
+  h='';
+  const q=lastStockQ||{};
+  h+=srow('OZON · цена', q.last!=null?fPrice(q.last)+'<i>₽</i>':'——', dPct(q.changePct));
+  h+=srow('Открытие', q.open!=null?fPrice(q.open)+'<i>₽</i>':'——');
+  h+=srow('Максимум', q.high!=null?fPrice(q.high)+'<i>₽</i>':'——');
+  h+=srow('Минимум', q.low!=null?fPrice(q.low)+'<i>₽</i>':'——');
+  h+=srow('Объём за день', q.volToday!=null?Number(q.volToday).toLocaleString('ru-RU')+'<i>шт</i>':'——');
+  h+=srow('Оборот', q.valToday!=null?fBig(q.valToday):'——');
+  h+=srow('Капитализация', q.cap!=null?fBig(q.cap):'——');
+  $('sum-eq').innerHTML=h;
 }
 document.querySelectorAll('.vtab').forEach(b=>b.addEventListener('click',()=>{
   const v=b.dataset.view;
