@@ -67,7 +67,7 @@ export default async function handler(req, res) {
     // последние ~90 свечей
     if (candles.length > 90) candles = candles.slice(-90);
 
-    res.setHeader('Cache-Control', 's-maxage=20, stale-while-revalidate=40');
+    res.setHeader('Cache-Control', 's-maxage=20, stale-while-revalidate=3600');
     return res.status(200).json({ secid, interval, candles });
   } catch (e) {
     return res.status(500).json({ error: e.message });

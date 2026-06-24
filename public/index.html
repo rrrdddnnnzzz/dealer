@@ -581,6 +581,20 @@ function carryDays(from){
 /* ── кэш последних данных: рынок закрыт → показываем последнее значение + «данные на …» ── */
 const LS={get:k=>{try{return JSON.parse(localStorage.getItem(k));}catch(_){return null;}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(_){}}};
 const dmNow=()=>new Date().toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'});
+// устойчивый JSON-fetch: таймаут + 1 повтор (от перебоев сети/апстрима)
+async function jget(url,{tries=2,timeout=9000}={}){
+  let err;
+  for(let i=0;i<tries;i++){
+    try{
+      const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),timeout);
+      const r=await fetch(url,{signal:ctrl.signal}); clearTimeout(to);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const j=await r.json(); if(j&&j.error) throw new Error(j.error);
+      return j;
+    }catch(e){ err=e; if(i<tries-1) await new Promise(s=>setTimeout(s,700)); }
+  }
+  throw err;
+}
 
 function spread(val){
   if(val==null) return {str:'——',cls:''};
@@ -654,10 +668,16 @@ function renderRusfar(d){
 
 async function fetchRusfar(){
   try{
-    const r=await fetch('/api/rusfar'); if(!r.ok)throw new Error(`HTTP ${r.status}`);
-    const j=await r.json(); if(j.error)throw new Error(j.error);
+    const j=await jget('/api/rusfar');
+    if(!j.data) throw new Error('пусто');
+    LS.set('cacheRusfar', j.data);
     renderRusfar(j.data);
-  }catch(e){ $('err-rusfar').textContent=`⚠ MOEX: ${e.message}`; $('err-rusfar').style.display='block'; }
+  }catch(e){
+    // удерживаем последнее значение: из памяти или из localStorage, не обнуляем и не пугаем ошибкой
+    const cached = (lastRusfar && Object.keys(lastRusfar).length) ? lastRusfar : LS.get('cacheRusfar');
+    if(cached){ renderRusfar(cached); }
+    else { $('err-rusfar').textContent=`⚠ MOEX: ${e.message}`; $('err-rusfar').style.display='block'; }
+  }
 }
 
 /* ───────── Ключевая ставка ───────── */
@@ -711,10 +731,10 @@ function drawIntraday(points){
 
 async function fetchIntraday(){
   try{
-    const r=await fetch('/api/intraday'); if(!r.ok)throw new Error(`HTTP ${r.status}`);
-    const j=await r.json(); if(j.error)throw new Error(j.error);
-    drawIntraday(j.points);
-  }catch(e){ drawIntraday([]); }
+    const j=await jget('/api/intraday');
+    if(j.points&&j.points.length){ LS.set('cacheIntraday',j.points); drawIntraday(j.points); }
+    else if(!lastIntraday){ const c=LS.get('cacheIntraday'); drawIntraday(c||[]); }
+  }catch(e){ const c=lastIntraday||LS.get('cacheIntraday'); if(c) drawIntraday(c); /* иначе оставляем как есть, не обнуляем */ }
 }
 
 /* ───────── FX CNYRUB ───────── */
@@ -929,10 +949,15 @@ function renderStock(j){
 }
 async function fetchStock(){
   try{
-    const r=await fetch('/api/stock'); if(!r.ok)throw new Error(`HTTP ${r.status}`);
-    const j=await r.json(); if(j.error)throw new Error(j.error);
+    const j=await jget('/api/stock');
+    if(!j.quote) throw new Error('пусто');
+    LS.set('cacheStock', j);
     renderStock(j);
-  }catch(e){ $('err-stock').textContent=`⚠ MOEX OZON: ${e.message}`; $('err-stock').style.display='block'; }
+  }catch(e){
+    const cached = lastStockQ ? null : LS.get('cacheStock');   // если уже что-то показано — оставляем как есть
+    if(cached){ renderStock(cached); }
+    else if(!lastStockQ){ $('err-stock').textContent=`⚠ MOEX OZON: ${e.message}`; $('err-stock').style.display='block'; }
+  }
 }
 
 /* ───────── Валютные пары ───────── */

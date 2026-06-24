@@ -63,7 +63,7 @@ export default async function handler(req, res) {
     const anyLive = (tod && tod.live) || (tom && tom.live);   // идут ли торги
     const asOfDate = prevDateMap[TOM] || prevDateMap[TOD] || null;
 
-    res.setHeader('Cache-Control', 's-maxage=20, stale-while-revalidate=40');
+    res.setHeader('Cache-Control', 's-maxage=15, stale-while-revalidate=3600');
     return res.status(200).json({
       tod, tom, spread,
       closed:       !anyLive,                       // true → показаны цены закрытия

@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'RUSFAR не найден в выдаче MOEX' });
     }
 
-    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+    res.setHeader('Cache-Control', 's-maxage=20, stale-while-revalidate=3600');
     return res.status(200).json({ data: out, fetchedAt: new Date().toISOString() });
   } catch (e) {
     return res.status(500).json({ error: e.message });

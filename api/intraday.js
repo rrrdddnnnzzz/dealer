@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       .map(row => ({ t: String(row[col.begin]).slice(11, 16), v: row[col.close] }))
       .filter(p => p.v != null);
 
-    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=3600');
     return res.status(200).json({ date: maxDate, points });
   } catch (e) {
     return res.status(500).json({ error: e.message });

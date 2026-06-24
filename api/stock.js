@@ -70,7 +70,7 @@ export default async function handler(req, res) {
         .filter(p => p.v != null);
     }
 
-    res.setHeader('Cache-Control', 's-maxage=20, stale-while-revalidate=40');
+    res.setHeader('Cache-Control', 's-maxage=20, stale-while-revalidate=3600');
     return res.status(200).json({ quote, spark, fetchedAt: new Date().toISOString() });
   } catch (e) {
     return res.status(500).json({ error: e.message });

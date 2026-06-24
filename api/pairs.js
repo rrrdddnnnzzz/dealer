@@ -75,7 +75,7 @@ export default async function handler(req, res) {
 
     if (!pairs.length) return res.status(502).json({ error: 'нет данных по парам' });
 
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=600');
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=3600');
     return res.status(200).json({ pairs, fetchedAt: new Date().toISOString() });
   } catch (e) {
     return res.status(500).json({ error: e.message });

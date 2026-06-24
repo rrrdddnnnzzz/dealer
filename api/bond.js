@@ -101,7 +101,7 @@ export default async function handler(req, res) {
     out.contractSpreadBp = Math.round(CONTRACT.spread * 10000);
     if (out.last == null && out.ytm == null) return res.status(502).json({ error: 'нет данных по облигации' });
 
-    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=120');
+    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=3600');
     return res.status(200).json({ ...out, fetchedAt: new Date().toISOString() });
   } catch (e) {
     return res.status(500).json({ error: e.message });

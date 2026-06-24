@@ -44,7 +44,7 @@ export default async function handler(req, res) {
   try {
     const [o, r, ru] = await Promise.all([ofz().catch(() => null), rgbi().catch(() => null), ruonia().catch(() => null)]);
     if (!o && !r && !ru) return res.status(502).json({ error: 'нет данных долгового рынка' });
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=600');
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=3600');
     return res.status(200).json({ ofz: o, rgbi: r, ruonia: ru, fetchedAt: new Date().toISOString() });
   } catch (e) {
     return res.status(500).json({ error: e.message });
